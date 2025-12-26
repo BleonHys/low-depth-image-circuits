@@ -88,7 +88,7 @@ def summarize(results_dir: Path) -> None:
             continue
         key = (encoding, model)
         grouped.setdefault(key, []).append(rec)
-        shape = cfg.get("image_shape")
+        shape = cfg.get("patch_shape") or cfg.get("image_shape")
         if shape:
             shapes_by_encoding.setdefault(encoding, []).append(tuple(shape))
 

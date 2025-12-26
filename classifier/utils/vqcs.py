@@ -12,6 +12,7 @@ jax.config.update("jax_compilation_cache_dir", "_jit_compiled")
 _platform = os.environ.get("JAX_PLATFORM_NAME")
 if _platform:
     jax.config.update("jax_platform_name", _platform)
+# Use x64 for numerical stability in circuit evaluations.
 jax.config.update("jax_enable_x64", True)
 
 """

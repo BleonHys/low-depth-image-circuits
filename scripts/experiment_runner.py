@@ -159,7 +159,6 @@ def _parse_vqc_metrics(run_dir: Path) -> dict | None:
         if data.get("status") != "SUCCESS":
             return None
         return {
-            "train_accuracy": data.get("train_acc_at_best"),
             "val_accuracy": data.get("best_val_acc"),
         }
     except Exception:
@@ -174,7 +173,7 @@ def _dataset_ready(dataset_dir: Path, n_patches: int, model: str) -> bool:
     if model in {"tn_mps", "tn_mpo"}:
         return (dataset_dir / f"mps_p{n_patches}.pkl").exists()
     if model in {"vqc_linear", "vqc_nonlinear"}:
-        return (dataset_dir / "states_p1.npy").exists()
+        return (dataset_dir / f"states_p{n_patches}.npy").exists()
     return True
 
 
@@ -189,271 +188,271 @@ def run_experiments(args) -> None:
         for model in args.models:
             for fold in args.folds:
                 for seed in args.seeds:
-                    restart_range = range(args.restarts) if model in {"vqc_linear", "vqc_nonlinear"} else range(1)
-                    for restart_idx in restart_range:
-                        dataset_seed = seed
-                        train_seed = seed + restart_idx
-                        dataset_id = (
-                            f"{args.base_dataset}__idx-{encoding}__k{args.max_per_class}__p{args.n_patches}__s{dataset_seed}"
-                        )
-                        run_dir = results_dir / dataset_id / model / f"fold{fold}" / f"seed{train_seed}"
-                        _ensure_dir(run_dir)
+                    dataset_id = (
+                        f"{args.base_dataset}__idx-{encoding}__k{args.max_per_class}__p{args.n_patches}__s{seed}"
+                    )
+                    run_dir = results_dir / dataset_id / model / f"fold{fold}" / f"seed{seed}"
+                    _ensure_dir(run_dir)
 
-                        run_json_path = run_dir / "run.json"
-                        if args.skip_if_done and run_json_path.exists():
-                            try:
-                                existing = json.loads(run_json_path.read_text(encoding="utf-8"))
-                                if existing.get("status") == "SUCCESS":
-                                    continue
-                            except Exception:
-                                pass
-
-                        stdout_path = run_dir / "stdout.txt"
-                        stderr_path = run_dir / "stderr.txt"
-
-                        record = {
-                            "config": {
-                                "tfds_name": args.tfds_name,
-                                "base_dataset": args.base_dataset,
-                                "dataset_id": dataset_id,
-                                "encoding": encoding,
-                                "model": model,
-                                "fold": fold,
-                                "seed": train_seed,
-                                "dataset_seed": dataset_seed,
-                                "restart_idx": restart_idx,
-                                "max_per_class": args.max_per_class,
-                                "n_patches": args.n_patches,
-                                "timestamp": datetime.utcnow().isoformat() + "Z",
-                                "git_commit": git_commit,
-                            },
-                            "status": "FAILED",
-                            "metrics": None,
-                            "runtime_seconds": None,
-                            "logs": {
-                                "stdout": str(stdout_path),
-                                "stderr": str(stderr_path),
-                            },
-                            "error": None,
-                            "artifacts": {},
-                        }
-
+                    run_json_path = run_dir / "run.json"
+                    if args.skip_if_done and run_json_path.exists():
                         try:
-                            if model in {"vqc_linear", "vqc_nonlinear"} and args.n_patches != 1:
-                                record["error"] = "invalid_n_patches: VQC requires n_patches=1"
-                                run_json_path.write_text(json.dumps(record, indent=2))
+                            existing = json.loads(run_json_path.read_text(encoding="utf-8"))
+                            if existing.get("status") == "SUCCESS":
                                 continue
+                        except Exception:
+                            pass
 
-                            dataset_dir = ROOT / "data" / dataset_id
-                            try:
-                                patch_m, patch_n = _infer_patch_shape(args.tfds_name, args.n_patches, dataset_dir)
-                                record["config"]["patch_shape"] = [patch_m, patch_n]
-                            except Exception as exc:
-                                record["error"] = f"encoding_validation_failed: {exc}"
-                                run_json_path.write_text(json.dumps(record, indent=2))
-                                continue
+                    stdout_path = run_dir / "stdout.txt"
+                    stderr_path = run_dir / "stderr.txt"
 
-                            # Validate encoding early to ensure failure is recorded.
-                            if get_permutation is not None:
-                                try:
-                                    _ = get_permutation(patch_m, patch_n, encoding)
-                                except Exception as exc:
-                                    record["error"] = f"invalid_encoding: {exc}"
-                                    run_json_path.write_text(json.dumps(record, indent=2))
-                                    continue
+                    record = {
+                        "config": {
+                            "tfds_name": args.tfds_name,
+                            "base_dataset": args.base_dataset,
+                            "dataset_id": dataset_id,
+                            "encoding": encoding,
+                            "model": model,
+                            "fold": fold,
+                            "seed": seed,
+                            "restarts": args.restarts if model in {"vqc_linear", "vqc_nonlinear"} else 1,
+                            "max_per_class": args.max_per_class,
+                            "n_patches": args.n_patches,
+                            "timestamp": datetime.utcnow().isoformat() + "Z",
+                            "git_commit": git_commit,
+                        },
+                        "status": "FAILED",
+                        "metrics": None,
+                        "runtime_seconds": None,
+                        "logs": {
+                            "stdout": str(stdout_path),
+                            "stderr": str(stderr_path),
+                        },
+                        "error": None,
+                        "artifacts": {},
+                    }
 
-                            if not _dataset_ready(dataset_dir, args.n_patches, model):
-                                cached = dataset_cache.get(dataset_id)
-                                if cached is None or cached.get("status") in {"SUCCESS", "READY"}:
-                                    gen_stdout = run_dir / "dataset_stdout.txt"
-                                    gen_stderr = run_dir / "dataset_stderr.txt"
-                                    cmd = [
-                                        sys.executable,
-                                        "prepare_data.py",
-                                        "--dataset_name",
-                                        args.tfds_name,
-                                        "--dataset_id",
-                                        dataset_id,
-                                        "--indexing",
-                                        encoding,
-                                        "--n_patches",
-                                        str(args.n_patches),
-                                        "--max_per_class",
-                                        str(args.max_per_class),
-                                        "--seed",
-                                        str(dataset_seed),
-                                    ]
-                                    gen_res = _run_subprocess(cmd, gen_stdout, gen_stderr, args.timeout_seconds, cwd=ROOT)
-                                    cached = {
-                                        "status": gen_res["status"],
-                                        "stdout": str(gen_stdout),
-                                        "stderr": str(gen_stderr),
-                                    }
-                                    dataset_cache[dataset_id] = cached
-                                else:
-                                    dataset_cache[dataset_id] = cached
-                            else:
-                                dataset_cache[dataset_id] = {"status": "READY"}
-
-                            if dataset_cache[dataset_id]["status"] not in {"SUCCESS", "READY"} or not _dataset_ready(
-                                dataset_dir, args.n_patches, model
-                            ):
-                                record["error"] = "dataset_generation_failed"
-                                record["logs"]["dataset_stdout"] = dataset_cache[dataset_id].get("stdout")
-                                record["logs"]["dataset_stderr"] = dataset_cache[dataset_id].get("stderr")
-                                run_json_path.write_text(json.dumps(record, indent=2))
-                                continue
-
-                            dataset_config = _read_dataset_config(dataset_dir)
-                            if dataset_config:
-                                record["config"]["image_shape"] = dataset_config.get("shape")
-                                record["config"]["color_mode"] = dataset_config.get("color_mode")
-
-                            if model == "svm":
-                                factoring = "multicopy"
-                                factors = 1
-                                compression_level = 0
-                                timestamp = f"{dataset_id}__f{fold}__s{dataset_seed}"
-                                cmd = [
-                                    sys.executable,
-                                    "utils/svm_training.py",
-                                    "--timestamp",
-                                    timestamp,
-                                    "--foldindex",
-                                    str(fold),
-                                    "--dataset",
-                                    dataset_id,
-                                    "--factors",
-                                    str(factors),
-                                    "--compression_level",
-                                    str(compression_level),
-                                    "--factoring",
-                                    factoring,
-                                ]
-                                result = _run_subprocess(cmd, stdout_path, stderr_path, args.timeout_seconds, cwd=ROOT / "classifier")
-                                record["runtime_seconds"] = result["runtime"]
-                                if result["status"] == "SUCCESS":
-                                    svm_dir = ROOT / "classifier" / "_results" / "svm" / f"{dataset_id}_{timestamp}"
-                                    record["artifacts"]["svm_results_dir"] = str(svm_dir)
-                                    metrics = _parse_svm_metrics(svm_dir, factoring, factors, compression_level)
-                                    record["metrics"] = metrics
-                                record["status"] = result["status"]
-                            elif model in {"tn_mps", "tn_mpo"}:
-                                tn_model = "mps" if model == "tn_mps" else "mpo"
-                                cmd = [
-                                    sys.executable,
-                                    "scripts/run_tn_training.py",
-                                    "--dataset",
-                                    dataset_id,
-                                    "--model",
-                                    tn_model,
-                                    "--fold",
-                                    str(fold),
-                                    "--basepath",
-                                    str(run_dir),
-                                    "--data_dir",
-                                    str(ROOT / "data"),
-                                    "--patched",
-                                    "true" if args.n_patches > 1 else "false",
-                                    "--n_factors",
-                                    str(args.n_patches),
-                                    "--warmstart",
-                                    "false",
-                                    "--compression_depth",
-                                    "0",
-                                    "--n_samples_warm_start",
-                                    str(min(args.max_per_class, 100)),
-                                    "--batch_size",
-                                    "50",
-                                    "--learning_rate",
-                                    "1e-4",
-                                    "--epochs",
-                                    "10",
-                                    "--chi_final",
-                                    "16",
-                                ]
-                                result = _run_subprocess(cmd, stdout_path, stderr_path, args.timeout_seconds, cwd=ROOT)
-                                record["runtime_seconds"] = result["runtime"]
-                                if result["status"] == "SUCCESS":
-                                    metrics = _parse_tn_metrics(run_dir)
-                                    record["metrics"] = metrics
-                                record["status"] = result["status"]
-                            elif model in {"vqc_linear", "vqc_nonlinear"}:
-                                model_name = "LinearVQC" if model == "vqc_linear" else "NonLinearVQC"
-                                vqc_depth = 4
-                                vqc_epochs = 10
-                                vqc_batch_size = 50
-                                vqc_optimizer = "adam"
-                                vqc_lr = 8e-4
-                                vqc_temperature = 128
-                                vqc_building_block = "su4"
-                                vqc_patience = 10
-                                vqc_min_delta = 0.0
-                                record["config"].update(
-                                    {
-                                        "vqc_model_name": model_name,
-                                        "vqc_depth": vqc_depth,
-                                        "vqc_epochs": vqc_epochs,
-                                        "vqc_batch_size": vqc_batch_size,
-                                        "vqc_optimizer": vqc_optimizer,
-                                        "vqc_lr": vqc_lr,
-                                        "vqc_temperature": vqc_temperature,
-                                        "vqc_building_block": vqc_building_block,
-                                        "vqc_patience": vqc_patience,
-                                        "vqc_min_delta": vqc_min_delta,
-                                    }
-                                )
-                                cmd = [
-                                    sys.executable,
-                                    "scripts/run_vqc_training.py",
-                                    "--dataset",
-                                    dataset_id,
-                                    "--data_dir",
-                                    str(ROOT / "data"),
-                                    "--fold",
-                                    str(fold),
-                                    "--seed",
-                                    str(train_seed),
-                                    "--model_name",
-                                    model_name,
-                                    "--building_block_tag",
-                                    vqc_building_block,
-                                    "--depth",
-                                    str(vqc_depth),
-                                    "--epochs",
-                                    str(vqc_epochs),
-                                    "--batch_size",
-                                    str(vqc_batch_size),
-                                    "--optimizer",
-                                    vqc_optimizer,
-                                    "--lr",
-                                    str(vqc_lr),
-                                    "--temperature",
-                                    str(vqc_temperature),
-                                    "--early_stopping_patience",
-                                    str(vqc_patience),
-                                    "--min_delta",
-                                    str(vqc_min_delta),
-                                    "--trial_dir",
-                                    str(run_dir),
-                                ]
-                                result = _run_subprocess(cmd, stdout_path, stderr_path, args.timeout_seconds, cwd=ROOT)
-                                record["runtime_seconds"] = result["runtime"]
-                                metrics = _parse_vqc_metrics(run_dir)
-                                record["metrics"] = metrics
-                                record["status"] = result["status"]
-                            else:
-                                record["error"] = f"unknown_model: {model}"
-
-                            if record["status"] != "SUCCESS":
-                                record["error"] = record["error"] or "run_failed"
-                                record["error_tail"] = _tail_lines(stderr_path)
-                        except Exception as exc:
-                            record["status"] = "FAILED"
-                            record["error"] = f"runner_exception: {exc}"
-                            record["traceback"] = traceback.format_exc()
-                        finally:
+                    try:
+                        if model in {"vqc_linear", "vqc_nonlinear"} and args.n_patches != 1:
+                            record["error"] = "invalid_n_patches: VQC requires n_patches=1"
                             run_json_path.write_text(json.dumps(record, indent=2))
+                            continue
+
+                        dataset_dir = ROOT / "data" / dataset_id
+                        try:
+                            patch_m, patch_n = _infer_patch_shape(args.tfds_name, args.n_patches, dataset_dir)
+                            record["config"]["patch_shape"] = [patch_m, patch_n]
+                        except Exception as exc:
+                            record["error"] = f"encoding_validation_failed: {exc}"
+                            run_json_path.write_text(json.dumps(record, indent=2))
+                            continue
+
+                        # Validate encoding early to ensure failure is recorded.
+                        if get_permutation is not None:
+                            try:
+                                _ = get_permutation(patch_m, patch_n, encoding)
+                            except Exception as exc:
+                                record["error"] = f"invalid_encoding: {exc}"
+                                run_json_path.write_text(json.dumps(record, indent=2))
+                                continue
+
+                        if not _dataset_ready(dataset_dir, args.n_patches, model):
+                            cached = dataset_cache.get(dataset_id)
+                            if cached is None or cached.get("status") in {"SUCCESS", "READY"}:
+                                gen_stdout = run_dir / "dataset_stdout.txt"
+                                gen_stderr = run_dir / "dataset_stderr.txt"
+                                cmd = [
+                                    sys.executable,
+                                    "prepare_data.py",
+                                    "--dataset_name",
+                                    args.tfds_name,
+                                    "--dataset_id",
+                                    dataset_id,
+                                    "--indexing",
+                                    encoding,
+                                    "--n_patches",
+                                    str(args.n_patches),
+                                    "--max_per_class",
+                                    str(args.max_per_class),
+                                    "--seed",
+                                    str(seed),
+                                ]
+                                gen_res = _run_subprocess(cmd, gen_stdout, gen_stderr, args.timeout_seconds, cwd=ROOT)
+                                cached = {
+                                    "status": gen_res["status"],
+                                    "stdout": str(gen_stdout),
+                                    "stderr": str(gen_stderr),
+                                }
+                                dataset_cache[dataset_id] = cached
+                            else:
+                                dataset_cache[dataset_id] = cached
+                        else:
+                            dataset_cache[dataset_id] = {"status": "READY"}
+
+                        if dataset_cache[dataset_id]["status"] not in {"SUCCESS", "READY"} or not _dataset_ready(
+                            dataset_dir, args.n_patches, model
+                        ):
+                            record["error"] = "dataset_generation_failed"
+                            record["logs"]["dataset_stdout"] = dataset_cache[dataset_id].get("stdout")
+                            record["logs"]["dataset_stderr"] = dataset_cache[dataset_id].get("stderr")
+                            run_json_path.write_text(json.dumps(record, indent=2))
+                            continue
+
+                        dataset_config = _read_dataset_config(dataset_dir)
+                        if dataset_config:
+                            record["config"]["image_shape"] = dataset_config.get("shape")
+                            record["config"]["color_mode"] = dataset_config.get("color_mode")
+
+                        if model == "svm":
+                            factoring = "multicopy"
+                            factors = 1
+                            compression_level = 0
+                            timestamp = f"{dataset_id}__f{fold}__s{seed}"
+                            cmd = [
+                                sys.executable,
+                                "utils/svm_training.py",
+                                "--timestamp",
+                                timestamp,
+                                "--foldindex",
+                                str(fold),
+                                "--dataset",
+                                dataset_id,
+                                "--factors",
+                                str(factors),
+                                "--compression_level",
+                                str(compression_level),
+                                "--factoring",
+                                factoring,
+                            ]
+                            result = _run_subprocess(
+                                cmd, stdout_path, stderr_path, args.timeout_seconds, cwd=ROOT / "classifier"
+                            )
+                            record["runtime_seconds"] = result["runtime"]
+                            if result["status"] == "SUCCESS":
+                                svm_dir = ROOT / "classifier" / "_results" / "svm" / f"{dataset_id}_{timestamp}"
+                                record["artifacts"]["svm_results_dir"] = str(svm_dir)
+                                metrics = _parse_svm_metrics(svm_dir, factoring, factors, compression_level)
+                                record["metrics"] = metrics
+                            record["status"] = result["status"]
+                        elif model in {"tn_mps", "tn_mpo"}:
+                            tn_model = "mps" if model == "tn_mps" else "mpo"
+                            cmd = [
+                                sys.executable,
+                                "scripts/run_tn_training.py",
+                                "--dataset",
+                                dataset_id,
+                                "--model",
+                                tn_model,
+                                "--fold",
+                                str(fold),
+                                "--basepath",
+                                str(run_dir),
+                                "--data_dir",
+                                str(ROOT / "data"),
+                                "--patched",
+                                "true" if args.n_patches > 1 else "false",
+                                "--n_factors",
+                                str(args.n_patches),
+                                "--warmstart",
+                                "false",
+                                "--compression_depth",
+                                "0",
+                                "--n_samples_warm_start",
+                                str(min(args.max_per_class, 100)),
+                                "--batch_size",
+                                "50",
+                                "--learning_rate",
+                                "1e-4",
+                                "--epochs",
+                                "10",
+                                "--chi_final",
+                                "16",
+                            ]
+                            result = _run_subprocess(cmd, stdout_path, stderr_path, args.timeout_seconds, cwd=ROOT)
+                            record["runtime_seconds"] = result["runtime"]
+                            if result["status"] == "SUCCESS":
+                                metrics = _parse_tn_metrics(run_dir)
+                                record["metrics"] = metrics
+                            record["status"] = result["status"]
+                        elif model in {"vqc_linear", "vqc_nonlinear"}:
+                            vqc_model = "linear" if model == "vqc_linear" else "nonlinear"
+                            vqc_depth = 2
+                            vqc_epochs = 30
+                            vqc_batch_size = 16
+                            vqc_optimizer = "adam"
+                            vqc_lr = 0.01
+                            vqc_temperature = 1.0
+                            vqc_building_block = "su4"
+                            vqc_patience = 10
+                            vqc_min_delta = 0.0
+                            record["config"].update(
+                                {
+                                    "vqc_model": vqc_model,
+                                    "vqc_depth": vqc_depth,
+                                    "vqc_epochs": vqc_epochs,
+                                    "vqc_batch_size": vqc_batch_size,
+                                    "vqc_optimizer": vqc_optimizer,
+                                    "vqc_lr": vqc_lr,
+                                    "vqc_temperature": vqc_temperature,
+                                    "vqc_building_block": vqc_building_block,
+                                    "vqc_patience": vqc_patience,
+                                    "vqc_min_delta": vqc_min_delta,
+                                    "vqc_restarts": args.restarts,
+                                }
+                            )
+                            cmd = [
+                                sys.executable,
+                                "scripts/run_vqc_training.py",
+                                "--dataset",
+                                dataset_id,
+                                "--data_dir",
+                                str(ROOT / "data"),
+                                "--fold",
+                                str(fold),
+                                "--seed",
+                                str(seed),
+                                "--model",
+                                vqc_model,
+                                "--building_block_tag",
+                                vqc_building_block,
+                                "--depth",
+                                str(vqc_depth),
+                                "--epochs",
+                                str(vqc_epochs),
+                                "--batch_size",
+                                str(vqc_batch_size),
+                                "--optimizer",
+                                vqc_optimizer,
+                                "--lr",
+                                str(vqc_lr),
+                                "--temperature",
+                                str(vqc_temperature),
+                                "--early_stopping_patience",
+                                str(vqc_patience),
+                                "--min_delta",
+                                str(vqc_min_delta),
+                                "--restarts",
+                                str(args.restarts),
+                                "--trial_dir",
+                                str(run_dir),
+                            ]
+                            result = _run_subprocess(cmd, stdout_path, stderr_path, args.timeout_seconds, cwd=ROOT)
+                            record["runtime_seconds"] = result["runtime"]
+                            metrics = _parse_vqc_metrics(run_dir)
+                            record["metrics"] = metrics
+                            record["status"] = result["status"]
+                        else:
+                            record["error"] = f"unknown_model: {model}"
+
+                        if record["status"] != "SUCCESS":
+                            record["error"] = record["error"] or "run_failed"
+                            record["error_tail"] = _tail_lines(stderr_path)
+                    except Exception as exc:
+                        record["status"] = "FAILED"
+                        record["error"] = f"runner_exception: {exc}"
+                        record["traceback"] = traceback.format_exc()
+                    finally:
+                        run_json_path.write_text(json.dumps(record, indent=2))
 
 
 if __name__ == "__main__":

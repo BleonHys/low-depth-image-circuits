@@ -83,6 +83,14 @@ python scripts/experiment_runner.py \
   --timeout_seconds 600
 ```
 
+VQC models are available as `vqc_linear` and `vqc_nonlinear` (currently `n_patches=1` only).
+
+Example (VQC ablation):
+
+```bash
+python scripts/experiment_runner.py --indexings row_major morton --models vqc_linear --folds 0 --seeds 42 --max_per_class 2 --timeout_seconds 1800
+```
+
 Summarize results:
 
 ```bash

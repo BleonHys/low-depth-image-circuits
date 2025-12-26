@@ -38,11 +38,15 @@ def _resolve_data_path(config):
 def _load_dataset(config):
     try:
         path = _resolve_data_path(config)
+        n_patches = int(config.get("n_patches", 1))
         compression_depth = config.get("compression_depth", 0)
         if not compression_depth:
             labels = np.load(os.path.join(path, "labels.npy"))
-            states = np.load(os.path.join(path, "states_p1.npy"))
-            states = states[0]
+            states = np.load(os.path.join(path, f"states_p{n_patches}.npy"))
+            if states.ndim == 3:
+                if states.shape[0] != 1:
+                    raise ValueError("VQC currently supports n_patches=1.")
+                states = states[0]
         else:
             labels = np.load(os.path.join(path, "compressed/labels.npy"))
             states = np.load(os.path.join(path, f"compressed/states_p1_c{compression_depth}.npy"))
