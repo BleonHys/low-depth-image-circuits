@@ -1,5 +1,6 @@
 import os
 import glob
+import warnings
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
@@ -13,7 +14,45 @@ from jaxopt import BFGS, LBFGS, ZoomLineSearch
 import dill
 import yaml
 
-from utils.vqcs import LinearVQC, NonLinearVQC
+try:
+    from utils.vqcs import LinearVQC, NonLinearVQC
+except ImportError:
+    from classifier.utils.vqcs import LinearVQC, NonLinearVQC
+
+
+def _resolve_data_path(config):
+    data_dir = config.get("data_dir")
+    if data_dir:
+        return os.path.join(os.fspath(data_dir), config["dataset_name"])
+    warnings.warn(
+        "config['data_dir'] not provided; falling back to basepath-derived data path.",
+        RuntimeWarning,
+    )
+    return os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(config["basepath"]))),
+        "data",
+        config["dataset_name"],
+    )
+
+
+def _load_dataset(config):
+    try:
+        path = _resolve_data_path(config)
+        compression_depth = config.get("compression_depth", 0)
+        if not compression_depth:
+            labels = np.load(os.path.join(path, "labels.npy"))
+            states = np.load(os.path.join(path, "states_p1.npy"))
+            states = states[0]
+        else:
+            labels = np.load(os.path.join(path, "compressed/labels.npy"))
+            states = np.load(os.path.join(path, f"compressed/states_p1_c{compression_depth}.npy"))
+            indices = np.arange(len(labels))
+            np.random.shuffle(indices)
+            labels = labels[indices]
+            states = states[indices]
+    except FileNotFoundError as exc:
+        raise ValueError("States file not found") from exc
+    return states, labels
 
 class Callback:
     def __init__(
@@ -118,13 +157,14 @@ class TrainingVQC:
         self.config = config
 
     def get_solver(self, optimizer_name, loss_fn, has_aux):
-        if optimizer_name == "BFGS":
+        optimizer_key = optimizer_name.lower()
+        if optimizer_key == "bfgs":
             self.batch_iters = 10
             return self.get_bfgs(loss_fn, has_aux)
-        elif optimizer_name == "LBFGS":
+        elif optimizer_key == "lbfgs":
             self.batch_iters = 1
             return self.get_lbfgs(loss_fn, has_aux)
-        elif optimizer_name == "adam":
+        elif optimizer_key == "adam":
             self.batch_iters = 1
             return self.get_adam(self.config["learning_rate"])
         else:
@@ -158,6 +198,20 @@ class TrainingVQC:
         return optimizer
 
     def train(self):
+        seed = self.config.get("seed")
+        if seed is not None:
+            np.random.seed(seed)
+            jax.random.PRNGKey(seed)
+
+        states, labels = _load_dataset(self.config)
+
+        if not self.config.get("n_qubits"):
+            dim = states.shape[1]
+            n_qubits = int(np.log2(dim))
+            if 2**n_qubits != dim:
+                raise ValueError(f"State dimension {dim} is not a power of two; cannot infer n_qubits.")
+            self.config["n_qubits"] = n_qubits
+
         if self.config["model_name"] == "LinearVQC":
             model = LinearVQC(
                 N_QUBITS=self.config["n_qubits"],
@@ -181,23 +235,6 @@ class TrainingVQC:
         else:
             raise ValueError(f"Unknown model: {self.config['model_name']}")
 
-        try:
-            path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(self.config["basepath"]))), "data", self.config["dataset_name"])
-            if not self.config["compression_depth"]:
-                labels = np.load(os.path.join(path, "labels.npy"))
-                states = np.load(os.path.join(path, "states_p1.npy"))
-                states = states[0]
-            else:
-                labels = np.load(os.path.join(path, "compressed/labels.npy"))
-                states = np.load(os.path.join(path, f"compressed/states_p1_c{self.config['compression_depth']}.npy"))
-                indices = np.arange(len(labels))
-                np.random.seed(42)
-                np.random.shuffle(indices)
-                labels = labels[indices]
-                states = states[indices]
-        except FileNotFoundError:
-            raise ValueError("States file not found")
-
         skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
         splits = list(skf.split(states, labels))
@@ -205,7 +242,7 @@ class TrainingVQC:
 
         states_train, targets_train = states[train_idx], labels[train_idx]
         states_val, targets_val = states[val_idx], labels[val_idx]
-        n_batches = len(states_train) // self.config["batch_size"]
+        n_batches = max(1, len(states_train) // self.config["batch_size"])
 
         states_train_batches = np.array_split(states_train, n_batches)
         states_val_batches = np.array_split(states_val, n_batches)
@@ -228,7 +265,8 @@ class TrainingVQC:
             trial_dir=self.config["trial_dir"]
         )
 
-        if self.config["optimizer"] == "adam":
+        optimizer_key = self.config["optimizer"].lower()
+        if optimizer_key == "adam":
             solver = self.get_solver(self.config["optimizer"], loss_fn, has_aux=False)
             solver_state = solver.init(params)
         else:
@@ -236,14 +274,24 @@ class TrainingVQC:
             solver = self.get_solver(self.config["optimizer"], loss_fn_mean, has_aux=False)
 
         params_epoch = []
+        best_val_loss = float("inf")
+        best_val_acc = None
+        best_epoch = None
+        train_acc_at_best = None
+        patience_raw = self.config.get("early_stopping_patience", 10)
+        patience = int(patience_raw) if patience_raw is not None else 0
+        min_delta = float(self.config.get("min_delta", 0.0))
+        patience_counter = 0
+
         for epoch in range(self.config["epochs"]):
             with tqdm(total=len(states_train_batches), leave=False) as pbar:
                 pbar.set_description(f"Epoch {epoch + 1}/{self.config['epochs']}")
                 for batch in zip(states_train_batches, targets_train_batches):
-                    if not self.config["optimizer"] == "adam": state = solver.init_state(params, *batch)
+                    if optimizer_key != "adam":
+                        state = solver.init_state(params, *batch)
                     for _ in range(self.batch_iters):
 
-                        if self.config["optimizer"] == "adam":
+                        if optimizer_key == "adam":
                             gradient = jnp.mean(grad_fn_vmap(params, *batch), axis=0)
                             updates, solver_state = solver.update(gradient, solver_state, params)
                             params = optax.apply_updates(params, updates)
@@ -255,6 +303,23 @@ class TrainingVQC:
             pbar.close()
             for batch in zip(states_val_batches, targets_val_batches):
                 cb.callback(params, batch, "val")
+
+            if cb.losses_epoch["val"]:
+                val_loss = cb.losses_epoch["val"][-1]
+                val_acc = cb.accs_epoch["val"][-1]
+                train_acc = cb.accs_epoch["train"][-1] if cb.accs_epoch["train"] else None
+                if val_loss + min_delta < best_val_loss:
+                    best_val_loss = val_loss
+                    best_val_acc = val_acc
+                    best_epoch = epoch + 1
+                    train_acc_at_best = train_acc
+                    cb.best_params = params
+                    cb.lowest_val_loss = best_val_loss
+                    patience_counter = 0
+                else:
+                    patience_counter += 1
+                    if patience > 0 and patience_counter >= patience:
+                        break
         cb.writer.close()
 
         # Move the saving stuff to handling function?
@@ -273,7 +338,22 @@ class TrainingVQC:
         with open(f"{self.config['trial_dir']}/params_epoch.pkl", 'wb') as f:
             dill.dump(params_epoch, f)
 
-        return predict_fn, cb.best_params
+        if best_epoch is None and cb.losses_epoch["val"]:
+            best_epoch = len(cb.losses_epoch["val"])
+            best_val_loss = cb.losses_epoch["val"][-1]
+            best_val_acc = cb.accs_epoch["val"][-1]
+            train_acc_at_best = cb.accs_epoch["train"][-1] if cb.accs_epoch["train"] else None
+
+        n_params = int(np.asarray(params).size)
+        summary = {
+            "best_val_loss": best_val_loss,
+            "best_val_acc": best_val_acc,
+            "best_epoch": best_epoch,
+            "train_acc_at_best": train_acc_at_best,
+            "n_params": n_params,
+        }
+
+        return predict_fn, cb.best_params, summary
 
 def main(config_model, use_ray=True):
     if use_ray:
@@ -288,7 +368,8 @@ def main(config_model, use_ray=True):
         yaml.dump(config_model, f)
 
     training = TrainingVQC(config_model)
-    predict_fn, best_params = training.train()
+    predict_fn, best_params, summary = training.train()
+    return summary
 
 if __name__ == "__main__":
     from datetime import datetime

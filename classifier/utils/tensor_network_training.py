@@ -1,6 +1,7 @@
 import os
 import sys
 import pickle
+import warnings
 import numpy as np
 import jax
 import optax
@@ -293,7 +294,15 @@ def main(ray_config, use_ray=True):
         "model_name": ray_config["model_name"]
     }
 
-    data_path = f"{os.path.dirname(os.path.dirname(ray_config['basepath']))}/../data/{dataset_name}/"
+    data_dir = ray_config.get("data_dir")
+    if data_dir:
+        data_path = os.path.join(os.fspath(data_dir), dataset_name) + os.sep
+    else:
+        warnings.warn(
+            "ray_config['data_dir'] not provided; falling back to basepath-derived data path.",
+            RuntimeWarning,
+        )
+        data_path = f"{os.path.dirname(os.path.dirname(ray_config['basepath']))}/../data/{dataset_name}/"
     os.makedirs(trial_dir, exist_ok=True)
 
     # Load A_tensors and labels

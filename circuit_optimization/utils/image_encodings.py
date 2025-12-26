@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
+try:
+    from circuit_optimization.encodings.registry import get_permutation, inverse_permutation
+except ImportError:  # Fallback when running from within circuit_optimization/
+    from encodings.registry import get_permutation, inverse_permutation
+
+
+def _normalize_indexing(indexing):
+    if indexing == "indexing":
+        return None
+    return indexing
+
 def amplitude_encoding(images, indexing=None):
     """
     Calculate amplitude encoding states from input images.
@@ -29,19 +40,9 @@ def amplitude_encoding(images, indexing=None):
     states = np.reshape(images.copy(), (-1,m,n))
     batchsize = states.shape[0]
     
-    # indexing
-    if indexing == 'snake':
-        states[:,1::2,:] = states[:,1::2,::-1]
-    elif indexing == 'hierarchical':
-        assert m==n
-        num_qubits = int(np.log2(n))
-        index = hierarchical_index(num_qubits).reshape(-1)
-        states = images.reshape(batchsize, n**2)[:,np.argsort(index)]
-    elif indexing == 'gray':
-        index = binary_to_gray(np.arange(m))
-        states = images[:,np.argsort(index),:]
-        index = binary_to_gray(np.arange(n))
-        states = states[:,:,np.argsort(index)]
+    indexing = _normalize_indexing(indexing)
+    idx = get_permutation(m, n, indexing)
+    states = states.reshape(batchsize, m * n)[:, idx].reshape(batchsize, m, n)
     
     # normalize the states
     states = np.reshape(states, (-1, m*n))
@@ -68,21 +69,10 @@ def amplitude_decoding(states, shape=(32,32), indexing=None):
     images = np.reshape(states.copy(), (-1, *shape))
     batchsize = images.shape[0]
     
-    # undo indexing
-    if indexing == 'snake':
-        images[:,1::2,:] = images[:,1::2,::-1]
-    elif indexing == 'hierarchical':
-        assert shape[0] == shape[1]
-        num_qubits = int(np.log2(shape[0]))
-        images = np.reshape(states, (batchsize, np.prod(shape)))
-        index = hierarchical_index(num_qubits)
-        images = images[:,index.reshape(-1)].reshape(batchsize,*shape)
-    elif indexing == 'gray':
-        images = np.reshape(states, (batchsize, *shape))
-        index = binary_to_gray(np.arange(shape[0]))
-        images = images[:, index, :]
-        index = binary_to_gray(np.arange(shape[1]))
-        images = images[:, :, index]
+    indexing = _normalize_indexing(indexing)
+    idx = get_permutation(shape[0], shape[1], indexing)
+    inv = inverse_permutation(idx)
+    images = images.reshape(batchsize, -1)[:, inv].reshape(batchsize, *shape)
     
     return np.squeeze(images)
 
@@ -122,18 +112,9 @@ def FRQI_encoding(images, indexing='indexing', enc_type='trig'):
     batchsize = states.shape[0]
     num_qubits = int(np.log2(m*n))
     
-    # indexing
-    if indexing == 'snake':
-        states[:,1::2,:] = states[:,1::2,::-1]
-    elif indexing == 'hierarchical':
-        assert m==n
-        index = hierarchical_index(num_qubits//2).reshape(-1)
-        states = states.reshape(-1,n**2)[:,np.argsort(index)]
-    elif indexing == 'gray':
-        index = binary_to_gray(np.arange(m))
-        states = images[:,np.argsort(index),:]
-        index = binary_to_gray(np.arange(n))
-        states = states[:,:,np.argsort(index)]
+    indexing = _normalize_indexing(indexing)
+    idx = get_permutation(m, n, indexing)
+    states = states.reshape(batchsize, m * n)[:, idx].reshape(batchsize, m, n)
 
     # encode color qubits
     states = encode_greyscale(states.reshape(-1),
@@ -172,19 +153,10 @@ def FRQI_decoding(states, shape=(32,32), indexing='hierarchical', enc_type='trig
     images = decode_greyscale(images*2**(num_qubits/2), type_=enc_type)
     images = images.reshape(batchsize, *shape)
     
-    # undo indexing
-    if indexing == 'snake':
-        images[:,1::2,:] = images[:,1::2,::-1] # reverse snake ordering
-    elif indexing == 'hierarchical':
-        assert shape[0] == shape[1]
-        images = images.reshape(batchsize, shape[0]**2)
-        index = hierarchical_index(num_qubits//2).reshape(-1)
-        images = images[:,index].reshape(batchsize,*shape)
-    elif indexing == 'gray':
-        index = binary_to_gray(np.arange(shape[0]))
-        images = images[:, index, :]
-        index = binary_to_gray(np.arange(shape[1]))
-        images = images[:, :, index]
+    indexing = _normalize_indexing(indexing)
+    idx = get_permutation(shape[0], shape[1], indexing)
+    inv = inverse_permutation(idx)
+    images = images.reshape(batchsize, -1)[:, inv].reshape(batchsize, *shape)
     
     return np.squeeze(images)
 
@@ -221,18 +193,9 @@ def NEQR_encoding(images, q, indexing=None):
     batchsize = states.shape[0]
     num_qubits = int(np.log2(m*n))
     
-    # indexing
-    if indexing == 'snake':
-        states[:,1::2,:] = states[:,1::2,::-1]
-    elif indexing == 'hierarchical':
-        assert m==n
-        index = hierarchical_index(num_qubits//2).reshape(-1)
-        states = states.reshape(-1,n**2)[:,np.argsort(index)]
-    elif indexing == 'gray':
-        index = binary_to_gray(np.arange(m))
-        states = images[:,np.argsort(index),:]
-        index = binary_to_gray(np.arange(n))
-        states = states[:,:,np.argsort(index)]
+    indexing = _normalize_indexing(indexing)
+    idx = get_permutation(m, n, indexing)
+    states = states.reshape(batchsize, m * n)[:, idx].reshape(batchsize, m, n)
     
     # encode color qubits
     states = encode_disc_greyscale(states, q)
@@ -270,19 +233,10 @@ def NEQR_decoding(states, q, shape=(32,32), indexing=None):
     images = decode_disc_greyscale(images*2**(num_qubits/2), q)
     images = images.reshape(batchsize, *shape)
     
-    # undo indexing
-    if indexing == 'snake':
-        images[:,1::2,:] = images[:,1::2,::-1] # reverse snake ordering
-    elif indexing == 'hierarchical':
-        assert shape[0] == shape[1]
-        images = images.reshape(batchsize, shape[0]**2)
-        index = hierarchical_index(num_qubits//2).reshape(-1)
-        images = images[:,index].reshape(batchsize,*shape)
-    elif indexing == 'gray':
-        index = binary_to_gray(np.arange(shape[0]))
-        images = images[:, index, :]
-        index = binary_to_gray(np.arange(shape[1]))
-        images = images[:, :, index]
+    indexing = _normalize_indexing(indexing)
+    idx = get_permutation(shape[0], shape[1], indexing)
+    inv = inverse_permutation(idx)
+    images = images.reshape(batchsize, -1)[:, inv].reshape(batchsize, *shape)
     
     return np.squeeze(images)
 
@@ -488,19 +442,9 @@ def FRQI_RGBa_encoding(images, indexing='hierarchical'):
     # images
     images = images.copy()
     batch, m, n, _ = images.shape
-    # apply indexing
-    if indexing == 'hierarchical':
-        num_m = int(np.log2(m))
-        num_n = int(np.log2(n))
-        images = images.reshape(batch, *(2,)*(num_m + num_n), 3)
-        images = images.transpose(0,
-                                  *[ax+1 for bit in range(min(num_m, num_n)) for ax in [bit, bit + num_m]],
-                                  *range(min(num_m, num_n) + 1, num_m + 1),
-                                  *range(min(num_m, num_n) + num_m + 1, num_m + num_n + 1),
-                                  -1)
-    elif indexing == 'snake':
-        images[:, ::2, :] = images[:, ::2, ::-1]
-    images = images.reshape(batch, m*n, 3)
+    indexing = _normalize_indexing(indexing)
+    idx = get_permutation(m, n, indexing)
+    images = images.reshape(batch, m * n, 3)[:, idx, :]
     # map pixels to states
     states = np.zeros((batch, 2**3, m*n))
     funcs = [lambda x: np.cos(np.pi * x/2), lambda x: np.sin(np.pi * x/2)]
@@ -527,19 +471,6 @@ def FRQI_RGBa_decoding(states, indexing='hierarchical', shape=(32,32)):
         batch = states.shape[0]
     else:
         batch = 1
-    # batch = states.shape[0]
-    # invert indexing
-    if indexing == 'hierarchical':
-        num_m = int(np.log2(shape[0]))
-        num_n = int(np.log2(shape[1]))
-        states = states.reshape(batch * 2**3, *(2,)*(num_m+num_n))
-        if num_m > num_n:
-            states = states.transpose(0, *range(1, 2*num_n+1, 2), *range(2*num_n+1, num_m+num_n), *range(2, 2*num_n+1, 2))
-        else:
-            states = states.transpose(0, *range(1, 2*num_m+1, 2), *range(2, 2*num_m+1, 2), *range(2*num_m+1, num_m+num_n))
-    elif indexing == 'snake':
-        states = states.reshape(batch * 2**3, *shape)
-        states[:, ::2, :] = states[:, ::2, ::-1]
     # map states to pixels
     channels = []
     states = states.reshape(batch, 2**3, -1)
@@ -548,5 +479,10 @@ def FRQI_RGBa_decoding(states, indexing='hierarchical', shape=(32,32)):
         channel[channel > 1.] = 1.
         channel[channel <-1.] =-1.
         channels.append(np.arccos(channel)/np.pi)
-    images = np.stack(channels, axis=-1).reshape(batch, *shape, 3)
+    images = np.stack(channels, axis=-1).reshape(batch, -1, 3)
+
+    indexing = _normalize_indexing(indexing)
+    idx = get_permutation(shape[0], shape[1], indexing)
+    inv = inverse_permutation(idx)
+    images = images[:, inv, :].reshape(batch, *shape, 3)
     return images

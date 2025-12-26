@@ -78,9 +78,9 @@ class Orchestrator:
 
         sweeping_batch_size_true = image_batch.shape[0]
         if config["color"] == "rgb":
-            frqi_target = FRQI_RGBa_encoding(images=image_batch, indexing="hierarchical")
+            frqi_target = FRQI_RGBa_encoding(images=image_batch, indexing=config["indexing"])
         elif config["color"] == "gray":
-            frqi_target = FRQI_encoding(images=image_batch, indexing="hierarchical")
+            frqi_target = FRQI_encoding(images=image_batch, indexing=config["indexing"])
             frqi_target = move_qubits_right(frqi_target)
         else:
             raise ValueError("Unknown color encoding")
@@ -244,6 +244,7 @@ if __name__ == "__main__":
     parser.add_argument("--layers", type=int, default=4)
     parser.add_argument("--nodes", type=int, default=1)
     parser.add_argument("--dataset", type=str, default="mnist")
+    parser.add_argument("--indexing", type=str, default="hierarchical")
 
     parser.add_argument("--iters", type=int, default=10)
     # parser.add_argument("--samples_per_class", type=int, default=10)
@@ -260,6 +261,7 @@ if __name__ == "__main__":
         "use_ray": args.use_ray,
 
         "dataset": args.dataset,
+        "indexing": args.indexing,
         "circuit": args.circuit,
         "layers": args.layers,
 

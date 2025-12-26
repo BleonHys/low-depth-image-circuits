@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import os
 import pennylane as qml
 import jax
 from jax import numpy as jnp
@@ -8,7 +9,9 @@ import optax
 import copy
 
 jax.config.update("jax_compilation_cache_dir", "_jit_compiled")
-jax.config.update('jax_platform_name', 'gpu')
+_platform = os.environ.get("JAX_PLATFORM_NAME")
+if _platform:
+    jax.config.update("jax_platform_name", _platform)
 jax.config.update("jax_enable_x64", True)
 
 """

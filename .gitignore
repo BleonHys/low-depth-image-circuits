@@ -1,9 +1,17 @@
 .DS_Store
 .vscode
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+*.pyc
 
 *__pycache__/
 *_jit_compiled
+_jit_compiled/
 
 data
 *results
 *results_classifier
+results/

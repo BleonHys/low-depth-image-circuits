@@ -40,14 +40,57 @@ The first step is to download and process the image datasets. The `prepare_data.
 **Usage:**
 
 ```bash
-python prepare_data.py --dataset_name <dataset> [--n_patches <num_patches>]
+python prepare_data.py --dataset_name <dataset> [--dataset_id <id>] [--indexing <name>] [--n_patches <num_patches>]
 ```
 
 Example:
 
 ```bash
-python prepare_data.py --dataset_name mnist --n_patches 1
+python prepare_data.py --dataset_name mnist --indexing row_major --n_patches 1
 ```
+
+### Pixel Orderings / 2D Encodings
+
+Pixel orderings are managed via the permutation registry in `circuit_optimization/encodings/registry.py`.
+Each encoding is defined in its own file and must implement:
+
+```python
+def get_permutation(m: int, n: int) -> np.ndarray
+```
+
+Available encodings (CLI names):
+`row_major`, `column_major`, `snake`, `vertical_snake`, `diagonal`,
+`diagonal_zigzag`, `corner_spiral`, `morton`, `hilbert`.
+
+Aliases: `hierarchical`, `zorder`, `z-order` map to `morton`.
+
+To add a new encoding:
+1) Add a new file under `circuit_optimization/encodings/` with `get_permutation`.
+2) Register it in `circuit_optimization/encodings/registry.py`.
+
+### Encoding Ablation (Reproducible Runner)
+
+Run end-to-end ablations (dataset generation + training + evaluation):
+
+```bash
+python scripts/experiment_runner.py \
+  --tfds_name mnist \
+  --base_dataset mnist \
+  --indexings row_major morton hilbert \
+  --models svm \
+  --folds 0 \
+  --max_per_class 5 \
+  --timeout_seconds 600
+```
+
+Summarize results:
+
+```bash
+python scripts/summarize_results.py --results_dir results/encoding_ablation
+```
+
+Each run writes a `run.json` with status `SUCCESS`, `FAILED`, or `TIMEOUT`,
+plus stdout/stderr logs for transparent failure handling.
 
 ### 2. Quantum Circuit Optimization
 
@@ -114,9 +157,37 @@ cd classifier
 │   └── ...
 ├── data/                       # Default directory for datasets
 ├── plots/                      # Contains scripts and notebooks for generating plots and visualizations of the results from the optimization and classification tasks.
+├── scripts/                    # Experiment runner and summarizer for encoding ablations
 ├── prepare_data.py             # Script for data preparation and quantum encoding
 ├── requirements.txt            # Python dependencies
 └── README.md                   # This file
+```
+
+## Tests / Smoke Checks
+
+Run unit tests:
+
+```bash
+python -m unittest discover -s tests
+```
+
+Smoke check (small subset, SVM only):
+
+```bash
+python scripts/experiment_runner.py \
+  --tfds_name mnist \
+  --base_dataset mnist \
+  --indexings row_major morton hilbert \
+  --models svm \
+  --folds 0 \
+  --max_per_class 5 \
+  --timeout_seconds 600
+```
+
+Smoke check (small subset, VQC):
+
+```bash
+python scripts/experiment_runner.py --indexings row_major morton --models vqc_linear --folds 0 --seeds 42 --max_per_class 2 --timeout_seconds 1800
 ```
 
 ## Pennylane Datasets
