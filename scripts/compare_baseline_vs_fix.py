@@ -92,6 +92,7 @@ def _run_logged(cmd, cwd: Path, stdout_path: Path, stderr_path: Path, timeout: i
 
 def _prepare_dataset(
     worktree_path: Path,
+    data_dir: Path | None,
     tfds_name: str,
     dataset_id: str,
     encoding: str,
@@ -102,9 +103,11 @@ def _prepare_dataset(
     env,
     run_dir: Path,
 ) -> dict:
-    dataset_dir = worktree_path / "data" / dataset_id
+    dataset_dir = (data_dir or (worktree_path / "data")) / dataset_id
     if _dataset_ready(dataset_dir, n_patches):
         return {"status": "READY"}
+    if data_dir is not None:
+        return {"status": "MISSING"}
     stdout_path = run_dir / "dataset_stdout.txt"
     stderr_path = run_dir / "dataset_stderr.txt"
     cmd = [
@@ -212,6 +215,7 @@ def _run_vqc_training(
 def _run_vqc_job(
     worktree_path: Path,
     results_dir: Path,
+    data_dir: Path | None,
     tfds_name: str,
     base_dataset: str,
     encoding: str,
@@ -280,6 +284,7 @@ def _run_vqc_job(
 
     dataset_result = _prepare_dataset(
         worktree_path,
+        data_dir,
         tfds_name,
         dataset_id,
         encoding,
@@ -291,13 +296,15 @@ def _run_vqc_job(
         run_dir,
     )
     if dataset_result["status"] not in {"READY", "SUCCESS"}:
-        record["error"] = "dataset_generation_failed"
+        record["error"] = (
+            "dataset_missing_in_data_dir" if dataset_result["status"] == "MISSING" else "dataset_generation_failed"
+        )
         record["logs"]["dataset_stdout"] = dataset_result.get("stdout")
         record["logs"]["dataset_stderr"] = dataset_result.get("stderr")
         run_json_path.write_text(json.dumps(record, indent=2))
         return
 
-    dataset_dir = worktree_path / "data" / dataset_id
+    dataset_dir = (data_dir or (worktree_path / "data")) / dataset_id
     dataset_config = _read_dataset_config(dataset_dir)
     if dataset_config:
         record["config"]["image_shape"] = dataset_config.get("shape")
@@ -312,7 +319,7 @@ def _run_vqc_job(
 
     config = {
         "dataset_name": dataset_id,
-        "data_dir": os.fspath(worktree_path / "data"),
+        "data_dir": os.fspath(data_dir or (worktree_path / "data")),
         "basepath": os.fspath(run_dir),
         "fold": fold,
         "seed": seed,
@@ -358,12 +365,14 @@ def _run_vqc_job(
 
 def _run_jobs(worktree_path: Path, results_dir: Path, args, env) -> None:
     results_dir.mkdir(parents=True, exist_ok=True)
+    data_dir = Path(args.data_dir) if args.data_dir else None
     for encoding in args.indexings:
         for fold in args.folds:
             for seed in args.seeds:
                 _run_vqc_job(
                     worktree_path=worktree_path,
                     results_dir=results_dir,
+                    data_dir=data_dir,
                     tfds_name=args.tfds_name,
                     base_dataset=args.base_dataset,
                     encoding=encoding,
@@ -474,6 +483,7 @@ def _comparison_rows(baseline_runs: dict, fix_runs: dict, loss_epochs: int) -> l
 
 
 def main() -> int:
+    default_data_dir = ROOT / "data"
     parser = argparse.ArgumentParser(description="Run baseline vs fix VQC experiments and compare results.")
     parser.add_argument("--baseline_ref", type=str, default="baseline_eval")
     parser.add_argument("--fix_ref", type=str, default="fix_eval")
@@ -489,6 +499,7 @@ def main() -> int:
     parser.add_argument("--timeout_seconds", type=int, default=3600)
     parser.add_argument("--loss_curve_epochs", type=int, default=5)
     parser.add_argument("--skip_if_done", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--data_dir", type=str, default=str(default_data_dir) if default_data_dir.exists() else None)
     parser.add_argument("--vqc_depth", type=int, default=2)
     parser.add_argument("--vqc_epochs", type=int, default=30)
     parser.add_argument("--vqc_batch_size", type=int, default=16)
