@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import csv
+import hashlib
 import json
 import os
 import subprocess
@@ -177,6 +178,22 @@ def _derive_metrics_from_csv(csv_path: Path) -> dict:
     return metrics
 
 
+def _compute_split_info(dataset_dir: Path, fold: int) -> dict:
+    import numpy as np
+    from sklearn.model_selection import StratifiedKFold
+
+    labels = np.load(dataset_dir / "labels.npy")
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    splits = list(skf.split(np.zeros(len(labels)), labels))
+    _, val_idx = splits[int(fold)]
+    val_idx = np.asarray(val_idx, dtype=np.int64)
+    split_hash = hashlib.sha256(val_idx.tobytes()).hexdigest()
+    return {
+        "val_size": int(val_idx.shape[0]),
+        "val_idx_sha256": split_hash,
+    }
+
+
 def _ensure_legacy_data_link(results_dir: Path, dataset_id: str, source_dir: Path) -> None:
     legacy_root = results_dir / dataset_id / "data"
     legacy_root.mkdir(parents=True, exist_ok=True)
@@ -253,6 +270,11 @@ def _run_vqc_job(
         try:
             existing = json.loads(run_json_path.read_text(encoding="utf-8"))
             if existing.get("status") == "SUCCESS":
+                dataset_dir = (data_dir or (worktree_path / "data")) / dataset_id
+                if dataset_dir.exists():
+                    existing["data_split"] = _compute_split_info(dataset_dir, fold)
+                    existing.setdefault("config", {})["dataset_id"] = dataset_id
+                    run_json_path.write_text(json.dumps(existing, indent=2))
                 return
         except Exception:
             pass
@@ -289,6 +311,7 @@ def _run_vqc_job(
             "stderr": str(run_dir / "stderr.txt"),
         },
         "error": None,
+        "data_split": None,
     }
 
     dataset_result = _prepare_dataset(
@@ -323,6 +346,13 @@ def _run_vqc_job(
         _ensure_legacy_data_link(results_dir, dataset_id, dataset_dir)
     except Exception as exc:
         record["error"] = f"legacy_data_link_failed: {exc}"
+        run_json_path.write_text(json.dumps(record, indent=2))
+        return
+
+    try:
+        record["data_split"] = _compute_split_info(dataset_dir, fold)
+    except Exception as exc:
+        record["error"] = f"split_info_failed: {exc}"
         run_json_path.write_text(json.dumps(record, indent=2))
         return
 
@@ -447,12 +477,16 @@ def _collect_runs(results_dir: Path, loss_epochs: int) -> dict:
         seed = cfg.get("seed")
         if encoding is None or fold is None or seed is None:
             continue
+        split_info = data.get("data_split") or {}
         key = (encoding, int(fold), int(seed))
         run_dir = run_path.parent
         metrics = _load_metrics(run_dir)
         runs[key] = {
             "run_dir": str(run_dir),
             "status": data.get("status"),
+            "dataset_id": cfg.get("dataset_id"),
+            "val_size": split_info.get("val_size"),
+            "val_idx_sha256": split_info.get("val_idx_sha256"),
             "metrics": metrics,
             "train_loss_curve": _load_training_curve(run_dir, loss_epochs),
         }
@@ -475,6 +509,12 @@ def _comparison_rows(baseline_runs: dict, fix_runs: dict, loss_epochs: int) -> l
                 "seed": seed,
                 "baseline_status": base.get("status"),
                 "fix_status": fix.get("status"),
+                "baseline_dataset_id": base.get("dataset_id"),
+                "fix_dataset_id": fix.get("dataset_id"),
+                "baseline_val_size": base.get("val_size"),
+                "fix_val_size": fix.get("val_size"),
+                "baseline_val_idx_sha256": base.get("val_idx_sha256"),
+                "fix_val_idx_sha256": fix.get("val_idx_sha256"),
                 "baseline_best_val_acc": base_metrics.get("best_val_acc"),
                 "fix_best_val_acc": fix_metrics.get("best_val_acc"),
                 "baseline_best_val_loss": base_metrics.get("best_val_loss"),

@@ -24,9 +24,19 @@ def _load_metrics_json(run_dir: Path) -> dict | None:
         data = json.loads(metrics_path.read_text(encoding="utf-8"))
         if data.get("status") != "SUCCESS":
             return None
+        primary_val_acc = data.get("best_val_acc")
+        legacy_val_acc = data.get("best_val_acc_batchmean_unscaled")
+        if primary_val_acc is None:
+            primary_val_acc = legacy_val_acc
+        primary_train_acc = data.get("train_acc_at_best")
+        legacy_train_acc = data.get("train_acc_at_best_batchmean_unscaled")
+        if primary_train_acc is None:
+            primary_train_acc = legacy_train_acc
         return {
-            "val_accuracy": data.get("best_val_acc"),
-            "train_accuracy": data.get("train_acc_at_best"),
+            "val_accuracy": primary_val_acc,
+            "train_accuracy": primary_train_acc,
+            "val_accuracy_legacy_batchmean_unscaled": legacy_val_acc,
+            "train_accuracy_legacy_batchmean_unscaled": legacy_train_acc,
             "runtime_seconds": data.get("runtime_seconds"),
         }
     except Exception:
@@ -102,15 +112,19 @@ def summarize(results_dir: Path) -> None:
         success_rate = n_success / n_total if n_total else 0.0
 
         val_accs = []
+        legacy_val_accs = []
         runtimes = []
         for r in successes:
-            metrics = r.get("metrics") or {}
+            run_dir = Path(r.get("_run_dir", ""))
+            metrics = _load_metrics_json(run_dir) or {}
             if not metrics:
-                run_dir = Path(r.get("_run_dir", ""))
-                metrics = _load_metrics_json(run_dir) or {}
+                metrics = r.get("metrics") or {}
             val = metrics.get("val_accuracy")
             if val is not None and not np.isnan(val):
                 val_accs.append(val)
+            legacy_val = metrics.get("val_accuracy_legacy_batchmean_unscaled")
+            if legacy_val is not None and not np.isnan(legacy_val):
+                legacy_val_accs.append(legacy_val)
             runtime = r.get("runtime_seconds")
             if runtime is not None:
                 runtimes.append(runtime)
@@ -119,6 +133,8 @@ def summarize(results_dir: Path) -> None:
 
         mean_val = _safe_mean(val_accs)
         std_val = _safe_std(val_accs)
+        mean_legacy_val = _safe_mean(legacy_val_accs)
+        std_legacy_val = _safe_std(legacy_val_accs)
         mean_runtime = _safe_mean(runtimes)
         stability_score = success_rate * mean_val if mean_val is not None else None
 
@@ -140,6 +156,9 @@ def summarize(results_dir: Path) -> None:
             "success_rate": success_rate,
             "mean_val_acc": mean_val,
             "std_val_acc": std_val,
+            "mean_val_acc_legacy_batchmean_unscaled": mean_legacy_val,
+            "std_val_acc_legacy_batchmean_unscaled": std_legacy_val,
+            "legacy_metric_note": "legacy comparability only" if legacy_val_accs else None,
             "mean_runtime": mean_runtime,
             "stability_score": stability_score,
             "lps": lps_cache.get(encoding),

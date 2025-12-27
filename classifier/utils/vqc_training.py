@@ -351,6 +351,7 @@ class TrainingVQC:
                     best_epoch_baseline = epoch + 1
                     train_acc_at_best_baseline = baseline_train_acc
 
+                # Early stopping uses sample-weighted, temperature-scaled val loss to match training objective.
                 val_loss_scaled, val_acc_scaled, _ = _evaluate_scaled_metrics(
                     predict_fn,
                     params,
