@@ -177,6 +177,15 @@ def _derive_metrics_from_csv(csv_path: Path) -> dict:
     return metrics
 
 
+def _ensure_legacy_data_link(results_dir: Path, dataset_id: str, source_dir: Path) -> None:
+    legacy_root = results_dir / dataset_id / "data"
+    legacy_root.mkdir(parents=True, exist_ok=True)
+    link_path = legacy_root / dataset_id
+    if link_path.exists():
+        return
+    link_path.symlink_to(source_dir, target_is_directory=True)
+
+
 def _run_vqc_training(
     worktree_path: Path,
     config: dict,
@@ -309,6 +318,13 @@ def _run_vqc_job(
     if dataset_config:
         record["config"]["image_shape"] = dataset_config.get("shape")
         record["config"]["color_mode"] = dataset_config.get("color_mode")
+
+    try:
+        _ensure_legacy_data_link(results_dir, dataset_id, dataset_dir)
+    except Exception as exc:
+        record["error"] = f"legacy_data_link_failed: {exc}"
+        run_json_path.write_text(json.dumps(record, indent=2))
+        return
 
     try:
         n_qubits = _infer_n_qubits(dataset_dir, n_patches)
