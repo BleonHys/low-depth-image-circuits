@@ -464,7 +464,16 @@ def _load_training_curve(run_dir: Path, epochs: int) -> list[float]:
         return []
 
 
-def _collect_runs(results_dir: Path, loss_epochs: int) -> dict:
+def _collect_runs(
+    results_dir: Path,
+    loss_epochs: int,
+    encodings: set[str],
+    folds: set[int],
+    seeds: set[int],
+    base_dataset: str,
+    max_per_class: int,
+    n_patches: int,
+) -> dict:
     runs = {}
     for run_path in results_dir.rglob("run.json"):
         try:
@@ -476,6 +485,11 @@ def _collect_runs(results_dir: Path, loss_epochs: int) -> dict:
         fold = cfg.get("fold")
         seed = cfg.get("seed")
         if encoding is None or fold is None or seed is None:
+            continue
+        if encoding not in encodings or int(fold) not in folds or int(seed) not in seeds:
+            continue
+        expected_dataset_id = _dataset_id(base_dataset, encoding, max_per_class, n_patches, int(seed))
+        if cfg.get("dataset_id") != expected_dataset_id:
             continue
         split_info = data.get("data_split") or {}
         key = (encoding, int(fold), int(seed))
@@ -605,8 +619,29 @@ def main() -> int:
         env=env,
     )
 
-    baseline_runs = _collect_runs(baseline_results_dir, args.loss_curve_epochs)
-    fix_runs = _collect_runs(fix_results_dir, args.loss_curve_epochs)
+    encodings = set(args.indexings)
+    folds = set(int(f) for f in args.folds)
+    seeds = set(int(s) for s in args.seeds)
+    baseline_runs = _collect_runs(
+        baseline_results_dir,
+        args.loss_curve_epochs,
+        encodings,
+        folds,
+        seeds,
+        args.base_dataset,
+        args.max_per_class,
+        1,
+    )
+    fix_runs = _collect_runs(
+        fix_results_dir,
+        args.loss_curve_epochs,
+        encodings,
+        folds,
+        seeds,
+        args.base_dataset,
+        args.max_per_class,
+        1,
+    )
     rows = _comparison_rows(baseline_runs, fix_runs, args.loss_curve_epochs)
 
     comparison_csv = report_dir / "comparison.csv"
