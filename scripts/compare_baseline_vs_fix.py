@@ -65,7 +65,7 @@ def _infer_n_qubits(dataset_dir: Path, n_patches: int) -> int:
     import numpy as np
 
     states_path = dataset_dir / f"states_p{n_patches}.npy"
-    states = np.load(states_path)
+    states = np.load(states_path, mmap_mode="r")
     if states.ndim == 3:
         states = states[0]
     dim = int(states.shape[1])
@@ -190,7 +190,7 @@ def _compute_split_info(dataset_dir: Path, fold: int) -> dict:
     split_hash = hashlib.sha256(val_idx.tobytes()).hexdigest()
     return {
         "val_size": int(val_idx.shape[0]),
-        "val_idx_sha256": split_hash,
+        "val_idx_hash": split_hash,
     }
 
 
@@ -486,7 +486,7 @@ def _collect_runs(results_dir: Path, loss_epochs: int) -> dict:
             "status": data.get("status"),
             "dataset_id": cfg.get("dataset_id"),
             "val_size": split_info.get("val_size"),
-            "val_idx_sha256": split_info.get("val_idx_sha256"),
+            "val_idx_hash": split_info.get("val_idx_hash"),
             "metrics": metrics,
             "train_loss_curve": _load_training_curve(run_dir, loss_epochs),
         }
@@ -513,8 +513,8 @@ def _comparison_rows(baseline_runs: dict, fix_runs: dict, loss_epochs: int) -> l
                 "fix_dataset_id": fix.get("dataset_id"),
                 "baseline_val_size": base.get("val_size"),
                 "fix_val_size": fix.get("val_size"),
-                "baseline_val_idx_sha256": base.get("val_idx_sha256"),
-                "fix_val_idx_sha256": fix.get("val_idx_sha256"),
+                "baseline_val_idx_hash": base.get("val_idx_hash"),
+                "fix_val_idx_hash": fix.get("val_idx_hash"),
                 "baseline_best_val_acc": base_metrics.get("best_val_acc"),
                 "fix_best_val_acc": fix_metrics.get("best_val_acc"),
                 "baseline_best_val_loss": base_metrics.get("best_val_loss"),

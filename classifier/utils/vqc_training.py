@@ -1,5 +1,6 @@
 import os
 import glob
+import hashlib
 import warnings
 import pandas as pd
 import numpy as np
@@ -236,6 +237,10 @@ class TrainingVQC:
                 raise ValueError(f"State dimension {dim} is not a power of two; cannot infer n_qubits.")
             self.config["n_qubits"] = n_qubits
 
+        if seed is not None:
+            # Re-seed immediately before model initialization so params vary with seed.
+            np.random.seed(seed)
+
         if self.config["model_name"] == "LinearVQC":
             model = LinearVQC(
                 N_QUBITS=self.config["n_qubits"],
@@ -263,6 +268,9 @@ class TrainingVQC:
 
         splits = list(skf.split(states, labels))
         train_idx, val_idx = splits[self.config["fold"]]
+        val_idx = np.asarray(val_idx, dtype=np.int64)
+        val_size = int(val_idx.shape[0])
+        val_idx_hash = hashlib.sha256(val_idx.tobytes()).hexdigest()
 
         states_train, targets_train = states[train_idx], labels[train_idx]
         states_val, targets_val = states[val_idx], labels[val_idx]
@@ -406,13 +414,16 @@ class TrainingVQC:
             "best_epoch": best_epoch,
             "train_acc_at_best": train_acc_at_best,
             "n_params": n_params,
+            "best_val_loss_scaled": best_val_loss,
             "best_val_loss_batchmean_unscaled": best_val_loss_baseline if np.isfinite(best_val_loss_baseline) else None,
             "best_val_acc_batchmean_unscaled": best_val_acc_baseline,
             "best_epoch_batchmean_unscaled": best_epoch_baseline,
             "train_acc_at_best_batchmean_unscaled": train_acc_at_best_baseline,
+            "val_size": val_size,
+            "val_idx_hash": val_idx_hash,
         }
 
-        return predict_fn, cb.best_params, summary
+        return predict_fn, best_params, summary
 
 def main(config_model, use_ray=True):
     if use_ray:
@@ -426,6 +437,10 @@ def main(config_model, use_ray=True):
     with open(os.path.join(config_model["trial_dir"], "config.yaml"), 'w') as f:
         yaml.dump(config_model, f)
 
+    seed = config_model.get("seed")
+    if seed is not None:
+        np.random.seed(seed)
+        jax.random.PRNGKey(seed)
     training = TrainingVQC(config_model)
     predict_fn, best_params, summary = training.train()
     return summary

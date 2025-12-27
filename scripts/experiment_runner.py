@@ -158,9 +158,22 @@ def _parse_vqc_metrics(run_dir: Path) -> dict | None:
         data = json.loads(metrics_path.read_text(encoding="utf-8"))
         if data.get("status") != "SUCCESS":
             return None
-        return {
+        metrics = {
             "val_accuracy": data.get("best_val_acc"),
+            "best_val_acc": data.get("best_val_acc"),
+            "best_val_loss": data.get("best_val_loss"),
+            "best_epoch": data.get("best_epoch"),
         }
+        legacy_fields = (
+            "best_val_acc_batchmean_unscaled",
+            "best_val_loss_batchmean_unscaled",
+            "best_epoch_batchmean_unscaled",
+            "train_acc_at_best_batchmean_unscaled",
+        )
+        for field in legacy_fields:
+            if field in data:
+                metrics[field] = data.get(field)
+        return metrics
     except Exception:
         return None
 

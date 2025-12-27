@@ -24,6 +24,7 @@ def _base_metrics(args, seed: int) -> dict:
         "best_val_acc": None,
         "best_val_loss": None,
         "best_epoch": None,
+        "best_val_loss_scaled": None,
         "runtime_seconds": None,
         "n_params": None,
         "best_val_loss_batchmean_unscaled": None,
@@ -31,6 +32,8 @@ def _base_metrics(args, seed: int) -> dict:
         "best_epoch_batchmean_unscaled": None,
         "train_acc_at_best": None,
         "train_acc_at_best_batchmean_unscaled": None,
+        "val_size": None,
+        "val_idx_hash": None,
         "seed": seed,
         "fold": args.fold,
         "dataset": args.dataset,
@@ -108,17 +111,9 @@ def run(args) -> int:
     if successes:
         best = max(successes, key=lambda m: m["best_val_acc"])
         final = _base_metrics(args, best["seed"])
-        final.update(
-            {
-                "status": "SUCCESS",
-                "best_val_acc": best.get("best_val_acc"),
-                "best_val_loss": best.get("best_val_loss"),
-                "best_epoch": best.get("best_epoch"),
-                "runtime_seconds": best.get("runtime_seconds"),
-                "n_params": best.get("n_params"),
-                "error": None,
-            }
-        )
+        final.update(best)
+        final["status"] = "SUCCESS"
+        final["error"] = None
         _write_json(trial_dir / "metrics.json", final)
         return 0
 
