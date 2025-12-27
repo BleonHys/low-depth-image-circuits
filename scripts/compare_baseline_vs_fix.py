@@ -40,6 +40,350 @@ def _worktree_is_clean(path: Path) -> bool:
     return status == ""
 
 
+def _dataset_ready(dataset_dir: Path, n_patches: int) -> bool:
+    if not (dataset_dir / "labels.npy").exists():
+        return False
+    return (dataset_dir / f"states_p{n_patches}.npy").exists()
+
+
+def _dataset_id(base_dataset: str, encoding: str, max_per_class: int, n_patches: int, seed: int) -> str:
+    return f"{base_dataset}__idx-{encoding}__k{max_per_class}__p{n_patches}__s{seed}"
+
+
+def _read_dataset_config(dataset_dir: Path) -> dict:
+    config_path = dataset_dir / "dataset_config.json"
+    if not config_path.exists():
+        return {}
+    try:
+        return json.loads(config_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _infer_n_qubits(dataset_dir: Path, n_patches: int) -> int:
+    import numpy as np
+
+    states_path = dataset_dir / f"states_p{n_patches}.npy"
+    states = np.load(states_path)
+    if states.ndim == 3:
+        states = states[0]
+    dim = int(states.shape[1])
+    n_qubits = int(np.log2(dim))
+    if 2**n_qubits != dim:
+        raise ValueError(f"State dimension {dim} is not a power of two.")
+    return n_qubits
+
+
+def _run_logged(cmd, cwd: Path, stdout_path: Path, stderr_path: Path, timeout: int, env=None) -> int:
+    stdout_path.parent.mkdir(parents=True, exist_ok=True)
+    stderr_path.parent.mkdir(parents=True, exist_ok=True)
+    with stdout_path.open("w", encoding="utf-8") as stdout, stderr_path.open("w", encoding="utf-8") as stderr:
+        result = subprocess.run(
+            cmd,
+            cwd=cwd,
+            env=env,
+            stdout=stdout,
+            stderr=stderr,
+            text=True,
+            timeout=timeout,
+        )
+    return result.returncode
+
+
+def _prepare_dataset(
+    worktree_path: Path,
+    tfds_name: str,
+    dataset_id: str,
+    encoding: str,
+    max_per_class: int,
+    n_patches: int,
+    seed: int,
+    timeout: int,
+    env,
+    run_dir: Path,
+) -> dict:
+    dataset_dir = worktree_path / "data" / dataset_id
+    if _dataset_ready(dataset_dir, n_patches):
+        return {"status": "READY"}
+    stdout_path = run_dir / "dataset_stdout.txt"
+    stderr_path = run_dir / "dataset_stderr.txt"
+    cmd = [
+        sys.executable,
+        "prepare_data.py",
+        "--dataset_name",
+        tfds_name,
+        "--dataset_id",
+        dataset_id,
+        "--indexing",
+        encoding,
+        "--n_patches",
+        str(n_patches),
+        "--max_per_class",
+        str(max_per_class),
+        "--seed",
+        str(seed),
+    ]
+    returncode = _run_logged(cmd, worktree_path, stdout_path, stderr_path, timeout, env=env)
+    status = "SUCCESS" if returncode == 0 else "FAILED"
+    return {
+        "status": status,
+        "stdout": str(stdout_path),
+        "stderr": str(stderr_path),
+    }
+
+
+def _derive_metrics_from_csv(csv_path: Path) -> dict:
+    if not csv_path.exists():
+        return {}
+    try:
+        import pandas as pd
+
+        df = pd.read_csv(csv_path)
+    except Exception:
+        return {}
+
+    metrics = {}
+    if "loss_val" in df.columns and not df["loss_val"].isna().all():
+        idx_base = int(df["loss_val"].idxmin())
+        metrics["best_val_loss_batchmean_unscaled"] = float(df.loc[idx_base, "loss_val"])
+        if "accuracy_val" in df.columns:
+            metrics["best_val_acc_batchmean_unscaled"] = float(df.loc[idx_base, "accuracy_val"])
+        metrics["best_epoch_batchmean_unscaled"] = idx_base + 1
+        if "accuracy_train" in df.columns:
+            metrics["train_acc_at_best_batchmean_unscaled"] = float(df.loc[idx_base, "accuracy_train"])
+
+    if "loss_val_scaled" in df.columns and not df["loss_val_scaled"].isna().all():
+        idx_scaled = int(df["loss_val_scaled"].idxmin())
+        metrics["best_val_loss"] = float(df.loc[idx_scaled, "loss_val_scaled"])
+        if "accuracy_val_sampleweighted" in df.columns:
+            metrics["best_val_acc"] = float(df.loc[idx_scaled, "accuracy_val_sampleweighted"])
+        elif "accuracy_val" in df.columns:
+            metrics["best_val_acc"] = float(df.loc[idx_scaled, "accuracy_val"])
+        metrics["best_epoch"] = idx_scaled + 1
+        if "accuracy_train" in df.columns:
+            metrics["train_acc_at_best"] = float(df.loc[idx_scaled, "accuracy_train"])
+    elif "loss_val" in df.columns and not df["loss_val"].isna().all():
+        idx_base = int(df["loss_val"].idxmin())
+        metrics["best_val_loss"] = float(df.loc[idx_base, "loss_val"])
+        if "accuracy_val" in df.columns:
+            metrics["best_val_acc"] = float(df.loc[idx_base, "accuracy_val"])
+        metrics["best_epoch"] = idx_base + 1
+        if "accuracy_train" in df.columns:
+            metrics["train_acc_at_best"] = float(df.loc[idx_base, "accuracy_train"])
+
+    return metrics
+
+
+def _run_vqc_training(
+    worktree_path: Path,
+    config: dict,
+    metrics_path: Path,
+    stdout_path: Path,
+    stderr_path: Path,
+    timeout: int,
+    env,
+) -> int:
+    config_path = metrics_path.parent / "config_compare.json"
+    config_path.write_text(json.dumps(config, indent=2))
+    script = (
+        "import json, sys, time, traceback\n"
+        "from pathlib import Path\n"
+        "from classifier.utils.vqc_training import main as vqc_main\n"
+        "config = json.loads(Path(sys.argv[1]).read_text())\n"
+        "metrics_path = Path(sys.argv[2])\n"
+        "start = time.time()\n"
+        "metrics = {\"status\": None, \"error\": None}\n"
+        "try:\n"
+        "    summary = vqc_main(config, use_ray=False)\n"
+        "    metrics[\"status\"] = \"SUCCESS\"\n"
+        "    if isinstance(summary, dict):\n"
+        "        metrics.update(summary)\n"
+        "except Exception as exc:\n"
+        "    metrics[\"status\"] = \"FAILED\"\n"
+        "    metrics[\"error\"] = str(exc)\n"
+        "    metrics[\"traceback\"] = traceback.format_exc()\n"
+        "metrics[\"runtime_seconds\"] = time.time() - start\n"
+        "metrics_path.write_text(json.dumps(metrics, indent=2))\n"
+    )
+    cmd = [sys.executable, "-c", script, str(config_path), str(metrics_path)]
+    return _run_logged(cmd, worktree_path, stdout_path, stderr_path, timeout, env=env)
+
+
+def _run_vqc_job(
+    worktree_path: Path,
+    results_dir: Path,
+    tfds_name: str,
+    base_dataset: str,
+    encoding: str,
+    fold: int,
+    seed: int,
+    max_per_class: int,
+    n_patches: int,
+    vqc_depth: int,
+    vqc_epochs: int,
+    vqc_batch_size: int,
+    vqc_lr: float,
+    vqc_temperature: float,
+    vqc_building_block: str,
+    vqc_patience: int,
+    vqc_min_delta: float,
+    timeout: int,
+    skip_if_done: bool,
+    env,
+) -> None:
+    dataset_id = _dataset_id(base_dataset, encoding, max_per_class, n_patches, seed)
+    run_dir = results_dir / dataset_id / "vqc_linear" / f"fold{fold}" / f"seed{seed}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    run_json_path = run_dir / "run.json"
+
+    if skip_if_done and run_json_path.exists():
+        try:
+            existing = json.loads(run_json_path.read_text(encoding="utf-8"))
+            if existing.get("status") == "SUCCESS":
+                return
+        except Exception:
+            pass
+
+    record = {
+        "config": {
+            "tfds_name": tfds_name,
+            "base_dataset": base_dataset,
+            "dataset_id": dataset_id,
+            "encoding": encoding,
+            "model": "vqc_linear",
+            "fold": fold,
+            "seed": seed,
+            "restarts": 1,
+            "max_per_class": max_per_class,
+            "n_patches": n_patches,
+            "vqc_model": "linear",
+            "vqc_depth": vqc_depth,
+            "vqc_epochs": vqc_epochs,
+            "vqc_batch_size": vqc_batch_size,
+            "vqc_optimizer": "adam",
+            "vqc_lr": vqc_lr,
+            "vqc_temperature": vqc_temperature,
+            "vqc_building_block": vqc_building_block,
+            "vqc_patience": vqc_patience,
+            "vqc_min_delta": vqc_min_delta,
+            "git_commit": _git(["-C", str(worktree_path), "rev-parse", "HEAD"]),
+        },
+        "status": "FAILED",
+        "metrics": None,
+        "runtime_seconds": None,
+        "logs": {
+            "stdout": str(run_dir / "stdout.txt"),
+            "stderr": str(run_dir / "stderr.txt"),
+        },
+        "error": None,
+    }
+
+    dataset_result = _prepare_dataset(
+        worktree_path,
+        tfds_name,
+        dataset_id,
+        encoding,
+        max_per_class,
+        n_patches,
+        seed,
+        timeout,
+        env,
+        run_dir,
+    )
+    if dataset_result["status"] not in {"READY", "SUCCESS"}:
+        record["error"] = "dataset_generation_failed"
+        record["logs"]["dataset_stdout"] = dataset_result.get("stdout")
+        record["logs"]["dataset_stderr"] = dataset_result.get("stderr")
+        run_json_path.write_text(json.dumps(record, indent=2))
+        return
+
+    dataset_dir = worktree_path / "data" / dataset_id
+    dataset_config = _read_dataset_config(dataset_dir)
+    if dataset_config:
+        record["config"]["image_shape"] = dataset_config.get("shape")
+        record["config"]["color_mode"] = dataset_config.get("color_mode")
+
+    try:
+        n_qubits = _infer_n_qubits(dataset_dir, n_patches)
+    except Exception as exc:
+        record["error"] = f"invalid_n_qubits: {exc}"
+        run_json_path.write_text(json.dumps(record, indent=2))
+        return
+
+    config = {
+        "dataset_name": dataset_id,
+        "data_dir": os.fspath(worktree_path / "data"),
+        "basepath": os.fspath(run_dir),
+        "fold": fold,
+        "seed": seed,
+        "model_name": "LinearVQC",
+        "building_block_tag": vqc_building_block,
+        "n_qubits": n_qubits,
+        "depth": vqc_depth,
+        "epochs": vqc_epochs,
+        "batch_size": vqc_batch_size,
+        "optimizer": "adam",
+        "learning_rate": vqc_lr,
+        "temperature": vqc_temperature,
+        "compression_depth": 0,
+        "early_stopping_patience": vqc_patience,
+        "min_delta": vqc_min_delta,
+        "n_patches": n_patches,
+    }
+
+    stdout_path = run_dir / "stdout.txt"
+    stderr_path = run_dir / "stderr.txt"
+    metrics_path = run_dir / "metrics.json"
+    returncode = _run_vqc_training(
+        worktree_path,
+        config,
+        metrics_path,
+        stdout_path,
+        stderr_path,
+        timeout,
+        env,
+    )
+    metrics = _load_metrics(run_dir)
+    derived = _derive_metrics_from_csv(run_dir / "training_data_epoch.csv")
+    metrics.update(derived)
+    metrics_path.write_text(json.dumps(metrics, indent=2))
+
+    record["runtime_seconds"] = metrics.get("runtime_seconds")
+    record["metrics"] = {"val_accuracy": metrics.get("best_val_acc")}
+    record["status"] = "SUCCESS" if returncode == 0 and metrics.get("status") == "SUCCESS" else "FAILED"
+    if record["status"] != "SUCCESS":
+        record["error"] = metrics.get("error") or "run_failed"
+    run_json_path.write_text(json.dumps(record, indent=2))
+
+
+def _run_jobs(worktree_path: Path, results_dir: Path, args, env) -> None:
+    results_dir.mkdir(parents=True, exist_ok=True)
+    for encoding in args.indexings:
+        for fold in args.folds:
+            for seed in args.seeds:
+                _run_vqc_job(
+                    worktree_path=worktree_path,
+                    results_dir=results_dir,
+                    tfds_name=args.tfds_name,
+                    base_dataset=args.base_dataset,
+                    encoding=encoding,
+                    fold=fold,
+                    seed=seed,
+                    max_per_class=args.max_per_class,
+                    n_patches=1,
+                    vqc_depth=args.vqc_depth,
+                    vqc_epochs=args.vqc_epochs,
+                    vqc_batch_size=args.vqc_batch_size,
+                    vqc_lr=args.vqc_lr,
+                    vqc_temperature=args.vqc_temperature,
+                    vqc_building_block=args.vqc_building_block,
+                    vqc_patience=args.vqc_patience,
+                    vqc_min_delta=args.vqc_min_delta,
+                    timeout=args.timeout_seconds,
+                    skip_if_done=args.skip_if_done,
+                    env=env,
+                )
+
 def _load_metrics(run_dir: Path) -> dict:
     metrics_path = run_dir / "metrics.json"
     if not metrics_path.exists():
@@ -174,78 +518,28 @@ def main() -> int:
     report_dir = Path(args.report_dir)
     report_dir.mkdir(parents=True, exist_ok=True)
 
-    baseline_results_dir = "results/baseline_eval"
-    fix_results_dir = "results/fix_eval"
+    baseline_results_dir = baseline_path / "results" / "baseline_eval"
+    fix_results_dir = fix_path / "results" / "fix_eval"
 
-    base_cmd = [
-        sys.executable,
-        "scripts/experiment_runner.py",
-        "--tfds_name",
-        args.tfds_name,
-        "--base_dataset",
-        args.base_dataset,
-        "--indexings",
-        *args.indexings,
-        "--models",
-        "vqc_linear",
-        "--folds",
-        *[str(f) for f in args.folds],
-        "--seeds",
-        *[str(s) for s in args.seeds],
-        "--restarts",
-        str(args.restarts),
-        "--max_per_class",
-        str(args.max_per_class),
-        "--n_patches",
-        "1",
-        "--timeout_seconds",
-        str(args.timeout_seconds),
-    ]
-    if args.skip_if_done:
-        base_cmd.append("--skip_if_done")
-    else:
-        base_cmd.append("--no-skip_if_done")
+    if args.restarts != 1:
+        raise RuntimeError("compare_baseline_vs_fix only supports restarts=1 for now.")
 
-    _run(base_cmd + ["--results_dir", baseline_results_dir], cwd=baseline_path, env=env)
-    _run(
-        base_cmd
-        + [
-            "--results_dir",
-            fix_results_dir,
-            "--vqc_depth",
-            str(args.vqc_depth),
-            "--vqc_epochs",
-            str(args.vqc_epochs),
-            "--vqc_batch_size",
-            str(args.vqc_batch_size),
-            "--vqc_lr",
-            str(args.vqc_lr),
-            "--vqc_temperature",
-            str(args.vqc_temperature),
-            "--vqc_building_block",
-            args.vqc_building_block,
-            "--vqc_patience",
-            str(args.vqc_patience),
-            "--vqc_min_delta",
-            str(args.vqc_min_delta),
-        ],
-        cwd=fix_path,
-        env=env,
-    )
+    _run_jobs(baseline_path, baseline_results_dir, args, env)
+    _run_jobs(fix_path, fix_results_dir, args, env)
 
     _run(
-        [sys.executable, "scripts/summarize_results.py", "--results_dir", baseline_results_dir],
-        cwd=baseline_path,
+        [sys.executable, "scripts/summarize_results.py", "--results_dir", str(baseline_results_dir)],
+        cwd=ROOT,
         env=env,
     )
     _run(
-        [sys.executable, "scripts/summarize_results.py", "--results_dir", fix_results_dir],
-        cwd=fix_path,
+        [sys.executable, "scripts/summarize_results.py", "--results_dir", str(fix_results_dir)],
+        cwd=ROOT,
         env=env,
     )
 
-    baseline_runs = _collect_runs(baseline_path / baseline_results_dir, args.loss_curve_epochs)
-    fix_runs = _collect_runs(fix_path / fix_results_dir, args.loss_curve_epochs)
+    baseline_runs = _collect_runs(baseline_results_dir, args.loss_curve_epochs)
+    fix_runs = _collect_runs(fix_results_dir, args.loss_curve_epochs)
     rows = _comparison_rows(baseline_runs, fix_runs, args.loss_curve_epochs)
 
     comparison_csv = report_dir / "comparison.csv"
@@ -262,8 +556,8 @@ def main() -> int:
             {
                 "baseline_ref": args.baseline_ref,
                 "fix_ref": args.fix_ref,
-                "baseline_results_dir": str(baseline_path / baseline_results_dir),
-                "fix_results_dir": str(fix_path / fix_results_dir),
+                "baseline_results_dir": str(baseline_results_dir),
+                "fix_results_dir": str(fix_results_dir),
                 "rows": rows,
             },
             indent=2,
