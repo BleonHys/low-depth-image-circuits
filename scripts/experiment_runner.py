@@ -205,6 +205,7 @@ def run_experiments(args) -> None:
 
                     stdout_path = run_dir / "stdout.txt"
                     stderr_path = run_dir / "stderr.txt"
+                    progress_tag = f"[encoding={encoding} model={model} fold={fold} seed={seed}]"
 
                     record = {
                         "config": {
@@ -257,6 +258,7 @@ def run_experiments(args) -> None:
                                 continue
 
                         if not _dataset_ready(dataset_dir, args.n_patches, model):
+                            print(f"{progress_tag} dataset generating", flush=True)
                             cached = dataset_cache.get(dataset_id)
                             if cached is None or cached.get("status") in {"SUCCESS", "READY"}:
                                 gen_stdout = run_dir / "dataset_stdout.txt"
@@ -287,6 +289,7 @@ def run_experiments(args) -> None:
                             else:
                                 dataset_cache[dataset_id] = cached
                         else:
+                            print(f"{progress_tag} dataset ready", flush=True)
                             dataset_cache[dataset_id] = {"status": "READY"}
 
                         if dataset_cache[dataset_id]["status"] not in {"SUCCESS", "READY"} or not _dataset_ready(
@@ -303,6 +306,7 @@ def run_experiments(args) -> None:
                             record["config"]["image_shape"] = dataset_config.get("shape")
                             record["config"]["color_mode"] = dataset_config.get("color_mode")
 
+                        print(f"{progress_tag} training started", flush=True)
                         if model == "svm":
                             factoring = "multicopy"
                             factors = 1
@@ -376,15 +380,15 @@ def run_experiments(args) -> None:
                             record["status"] = result["status"]
                         elif model in {"vqc_linear", "vqc_nonlinear"}:
                             vqc_model = "linear" if model == "vqc_linear" else "nonlinear"
-                            vqc_depth = 2
-                            vqc_epochs = 30
-                            vqc_batch_size = 16
+                            vqc_depth = args.vqc_depth
+                            vqc_epochs = args.vqc_epochs
+                            vqc_batch_size = args.vqc_batch_size
                             vqc_optimizer = "adam"
-                            vqc_lr = 0.01
-                            vqc_temperature = 1.0
-                            vqc_building_block = "su4"
-                            vqc_patience = 10
-                            vqc_min_delta = 0.0
+                            vqc_lr = args.vqc_lr
+                            vqc_temperature = args.vqc_temperature
+                            vqc_building_block = args.vqc_building_block
+                            vqc_patience = args.vqc_patience
+                            vqc_min_delta = args.vqc_min_delta
                             record["config"].update(
                                 {
                                     "vqc_model": vqc_model,
@@ -452,10 +456,38 @@ def run_experiments(args) -> None:
                         record["error"] = f"runner_exception: {exc}"
                         record["traceback"] = traceback.format_exc()
                     finally:
+                        print(f"{progress_tag} finished", flush=True)
                         run_json_path.write_text(json.dumps(record, indent=2))
 
 
 if __name__ == "__main__":
+    # Smoke test:
+    # python scripts/experiment_runner.py --help | rg -- '--vqc_'
+    # python scripts/experiment_runner.py \
+    #   --tfds_name mnist \
+    #   --base_dataset mnist \
+    #   --indexings row_major \
+    #   --models vqc_linear \
+    #   --folds 0 \
+    #   --seeds 0 \
+    #   --max_per_class 5 \
+    #   --n_patches 1 \
+    #   --results_dir results/vqc_smoke
+    # python - <<'PY'
+    # import json
+    # from pathlib import Path
+    # run = Path("results/vqc_smoke/mnist__idx-row_major__k5__p1__s0/vqc_linear/fold0/seed0/run.json")
+    # metrics = run.parent / "metrics.json"
+    # print(run.exists(), metrics.exists())
+    # data = json.loads(run.read_text())
+    # print(
+    #     data["config"]["vqc_temperature"],
+    #     data["config"]["vqc_lr"],
+    #     data["config"]["vqc_epochs"],
+    #     data["config"]["vqc_batch_size"],
+    #     data["config"]["vqc_building_block"],
+    # )
+    # PY
     parser = argparse.ArgumentParser(description="Run encoding ablation experiments.")
     parser.add_argument("--tfds_name", type=str, default="imagenette/320px")
     parser.add_argument("--base_dataset", type=str, default="imagenette_128")
@@ -469,5 +501,13 @@ if __name__ == "__main__":
     parser.add_argument("--timeout_seconds", type=int, default=3600)
     parser.add_argument("--results_dir", type=str, default="results/encoding_ablation")
     parser.add_argument("--skip_if_done", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--vqc_depth", type=int, default=2)
+    parser.add_argument("--vqc_epochs", type=int, default=100)
+    parser.add_argument("--vqc_batch_size", type=int, default=100)
+    parser.add_argument("--vqc_lr", type=float, default=8e-4)
+    parser.add_argument("--vqc_temperature", type=float, default=1.0 / 128.0)
+    parser.add_argument("--vqc_building_block", type=str, default="su4")
+    parser.add_argument("--vqc_patience", type=int, default=10)
+    parser.add_argument("--vqc_min_delta", type=float, default=0.0)
 
     run_experiments(parser.parse_args())

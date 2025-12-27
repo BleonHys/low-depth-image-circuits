@@ -26,6 +26,11 @@ def _base_metrics(args, seed: int) -> dict:
         "best_epoch": None,
         "runtime_seconds": None,
         "n_params": None,
+        "best_val_loss_batchmean_unscaled": None,
+        "best_val_acc_batchmean_unscaled": None,
+        "best_epoch_batchmean_unscaled": None,
+        "train_acc_at_best": None,
+        "train_acc_at_best_batchmean_unscaled": None,
         "seed": seed,
         "fold": args.fold,
         "dataset": args.dataset,
@@ -68,15 +73,8 @@ def _run_once(args, model_name: str, run_dir: Path, seed: int) -> dict:
     metrics = _base_metrics(args, seed)
     try:
         summary = vqc_main(config, use_ray=False) or {}
-        metrics.update(
-            {
-                "status": "SUCCESS",
-                "best_val_acc": summary.get("best_val_acc"),
-                "best_val_loss": summary.get("best_val_loss"),
-                "best_epoch": summary.get("best_epoch"),
-                "n_params": summary.get("n_params"),
-            }
-        )
+        metrics.update({"status": "SUCCESS"})
+        metrics.update(summary)
     except Exception as exc:
         metrics["status"] = "FAILED"
         metrics["error"] = str(exc)
@@ -150,11 +148,11 @@ if __name__ == "__main__":
     parser.add_argument("--building_block_tag", type=str, default="su4")
     parser.add_argument("--n_qubits", type=int, default=None)
     parser.add_argument("--depth", type=int, default=2)
-    parser.add_argument("--epochs", type=int, default=30)
-    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--batch_size", type=int, default=100)
     parser.add_argument("--optimizer", type=str, default="adam", choices=["adam", "bfgs", "lbfgs"])
-    parser.add_argument("--lr", type=float, default=0.01)
-    parser.add_argument("--temperature", type=float, default=1.0)
+    parser.add_argument("--lr", type=float, default=8e-4)
+    parser.add_argument("--temperature", type=float, default=1.0 / 128.0)
     parser.add_argument("--early_stopping_patience", type=int, default=10)
     parser.add_argument("--min_delta", type=float, default=0.0)
     parser.add_argument("--restarts", type=int, default=1)

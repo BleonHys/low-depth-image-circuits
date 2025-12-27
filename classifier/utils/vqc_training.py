@@ -58,6 +58,26 @@ def _load_dataset(config):
         raise ValueError("States file not found") from exc
     return states, labels
 
+
+def _evaluate_scaled_metrics(predict_fn, params, states_batches, targets_batches, temperature):
+    total_loss = 0.0
+    total_correct = 0
+    total_samples = 0
+    for states, targets in zip(states_batches, targets_batches):
+        if len(targets) == 0:
+            continue
+        preds = predict_fn(params, states)
+        targets_jnp = jnp.asarray(targets)
+        logits = preds * temperature
+        losses = optax.softmax_cross_entropy_with_integer_labels(logits, targets_jnp)
+        total_loss += float(jnp.sum(losses))
+        total_correct += int(jnp.sum(targets_jnp == jnp.argmax(preds, axis=1)))
+        total_samples += int(targets_jnp.shape[0])
+    if total_samples == 0:
+        return float("nan"), float("nan"), 0
+    return total_loss / total_samples, total_correct / total_samples, total_samples
+
+
 class Callback:
     def __init__(
         self,
@@ -246,12 +266,17 @@ class TrainingVQC:
 
         states_train, targets_train = states[train_idx], labels[train_idx]
         states_val, targets_val = states[val_idx], labels[val_idx]
-        n_batches = max(1, len(states_train) // self.config["batch_size"])
+        n_batches_train = max(1, len(states_train) // self.config["batch_size"])
+        n_batches_val = max(1, len(states_val) // self.config["batch_size"])
+        # Preserve baseline validation batching for comparison logging.
+        n_batches_val_baseline = n_batches_train
 
-        states_train_batches = np.array_split(states_train, n_batches)
-        states_val_batches = np.array_split(states_val, n_batches)
-        targets_train_batches = np.array_split(targets_train, n_batches)
-        targets_val_batches = np.array_split(targets_val, n_batches)
+        states_train_batches = np.array_split(states_train, n_batches_train)
+        targets_train_batches = np.array_split(targets_train, n_batches_train)
+        states_val_batches = np.array_split(states_val, n_batches_val)
+        targets_val_batches = np.array_split(targets_val, n_batches_val)
+        states_val_batches_baseline = np.array_split(states_val, n_batches_val_baseline)
+        targets_val_batches_baseline = np.array_split(targets_val, n_batches_val_baseline)
 
         params = model["params"]
 
@@ -264,7 +289,7 @@ class TrainingVQC:
         cb = Callback(
             predict_fn=predict_fn,
             n_batches_train=len(states_train_batches),
-            n_batches_val=len(states_val_batches),
+            n_batches_val=len(states_val_batches_baseline),
             params=params,
             trial_dir=self.config["trial_dir"]
         )
@@ -282,10 +307,17 @@ class TrainingVQC:
         best_val_acc = None
         best_epoch = None
         train_acc_at_best = None
+        best_params = params
+        best_val_loss_baseline = float("inf")
+        best_val_acc_baseline = None
+        best_epoch_baseline = None
+        train_acc_at_best_baseline = None
         patience_raw = self.config.get("early_stopping_patience", 10)
         patience = int(patience_raw) if patience_raw is not None else 0
         min_delta = float(self.config.get("min_delta", 0.0))
         patience_counter = 0
+        val_loss_scaled_history = []
+        val_acc_scaled_history = []
 
         for epoch in range(self.config["epochs"]):
             with tqdm(total=len(states_train_batches), leave=False) as pbar:
@@ -305,20 +337,38 @@ class TrainingVQC:
                     cb.callback(params, batch, "train", pbar)
             params_epoch.append(np.asarray(params))
             pbar.close()
-            for batch in zip(states_val_batches, targets_val_batches):
+            for batch in zip(states_val_batches_baseline, targets_val_batches_baseline):
                 cb.callback(params, batch, "val")
 
             if cb.losses_epoch["val"]:
-                val_loss = cb.losses_epoch["val"][-1]
-                val_acc = cb.accs_epoch["val"][-1]
-                train_acc = cb.accs_epoch["train"][-1] if cb.accs_epoch["train"] else None
-                if val_loss + min_delta < best_val_loss:
-                    best_val_loss = val_loss
-                    best_val_acc = val_acc
+                baseline_val_loss = cb.losses_epoch["val"][-1]
+                baseline_val_acc = cb.accs_epoch["val"][-1]
+                baseline_train_acc = cb.accs_epoch["train"][-1] if cb.accs_epoch["train"] else None
+
+                if baseline_val_loss < best_val_loss_baseline:
+                    best_val_loss_baseline = baseline_val_loss
+                    best_val_acc_baseline = baseline_val_acc
+                    best_epoch_baseline = epoch + 1
+                    train_acc_at_best_baseline = baseline_train_acc
+
+                val_loss_scaled, val_acc_scaled, _ = _evaluate_scaled_metrics(
+                    predict_fn,
+                    params,
+                    states_val_batches,
+                    targets_val_batches,
+                    self.config["temperature"],
+                )
+                val_loss_scaled_history.append(val_loss_scaled)
+                val_acc_scaled_history.append(val_acc_scaled)
+                cb.writer.add_scalar("metrics_epoch/loss_val_scaled", val_loss_scaled, epoch + 1)
+                cb.writer.add_scalar("metrics_epoch/accuracy_val_sampleweighted", val_acc_scaled, epoch + 1)
+
+                if np.isfinite(val_loss_scaled) and val_loss_scaled + min_delta < best_val_loss:
+                    best_val_loss = val_loss_scaled
+                    best_val_acc = val_acc_scaled
                     best_epoch = epoch + 1
-                    train_acc_at_best = train_acc
-                    cb.best_params = params
-                    cb.lowest_val_loss = best_val_loss
+                    train_acc_at_best = baseline_train_acc
+                    best_params = params
                     patience_counter = 0
                 else:
                     patience_counter += 1
@@ -337,15 +387,15 @@ class TrainingVQC:
                 dill.dump(predict_fn, f)
 
         with open(f"{self.config['trial_dir']}/params_best.pkl", 'wb') as f:
-            dill.dump(cb.best_params, f)
+            dill.dump(best_params, f)
 
         with open(f"{self.config['trial_dir']}/params_epoch.pkl", 'wb') as f:
             dill.dump(params_epoch, f)
 
-        if best_epoch is None and cb.losses_epoch["val"]:
-            best_epoch = len(cb.losses_epoch["val"])
-            best_val_loss = cb.losses_epoch["val"][-1]
-            best_val_acc = cb.accs_epoch["val"][-1]
+        if best_epoch is None and val_loss_scaled_history:
+            best_epoch = len(val_loss_scaled_history)
+            best_val_loss = val_loss_scaled_history[-1]
+            best_val_acc = val_acc_scaled_history[-1]
             train_acc_at_best = cb.accs_epoch["train"][-1] if cb.accs_epoch["train"] else None
 
         n_params = int(np.asarray(params).size)
@@ -355,6 +405,10 @@ class TrainingVQC:
             "best_epoch": best_epoch,
             "train_acc_at_best": train_acc_at_best,
             "n_params": n_params,
+            "best_val_loss_batchmean_unscaled": best_val_loss_baseline if np.isfinite(best_val_loss_baseline) else None,
+            "best_val_acc_batchmean_unscaled": best_val_acc_baseline,
+            "best_epoch_batchmean_unscaled": best_epoch_baseline,
+            "train_acc_at_best_batchmean_unscaled": train_acc_at_best_baseline,
         }
 
         return predict_fn, cb.best_params, summary
