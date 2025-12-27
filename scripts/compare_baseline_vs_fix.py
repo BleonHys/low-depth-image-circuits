@@ -191,7 +191,7 @@ def _run_vqc_training(
     script = (
         "import json, sys, time, traceback\n"
         "from pathlib import Path\n"
-        "from classifier.utils.vqc_training import main as vqc_main\n"
+        "from utils.vqc_training import main as vqc_main\n"
         "config = json.loads(Path(sys.argv[1]).read_text())\n"
         "metrics_path = Path(sys.argv[2])\n"
         "start = time.time()\n"
@@ -209,7 +209,7 @@ def _run_vqc_training(
         "metrics_path.write_text(json.dumps(metrics, indent=2))\n"
     )
     cmd = [sys.executable, "-c", script, str(config_path), str(metrics_path)]
-    return _run_logged(cmd, worktree_path, stdout_path, stderr_path, timeout, env=env)
+    return _run_logged(cmd, worktree_path / "classifier", stdout_path, stderr_path, timeout, env=env)
 
 
 def _run_vqc_job(
