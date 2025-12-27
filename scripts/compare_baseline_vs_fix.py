@@ -35,6 +35,11 @@ def _ensure_worktree(path: Path, ref: str) -> None:
     _git(["worktree", "add", str(path), ref])
 
 
+def _worktree_is_clean(path: Path) -> bool:
+    status = _git(["-C", str(path), "status", "--porcelain", "--untracked-files=no"])
+    return status == ""
+
+
 def _load_metrics(run_dir: Path) -> dict:
     metrics_path = run_dir / "metrics.json"
     if not metrics_path.exists():
@@ -152,8 +157,18 @@ def main() -> int:
 
     baseline_path = Path(args.worktree_base) / "baseline_eval"
     fix_path = Path(args.worktree_base) / "fix_eval"
+    fix_head = _git(["rev-parse", args.fix_ref])
+    current_head = _git(["rev-parse", "HEAD"])
+    use_current_fix = fix_head == current_head
+
+    if use_current_fix:
+        if not _worktree_is_clean(ROOT):
+            raise RuntimeError("Current worktree has tracked changes; commit or stash before compare.")
+        fix_path = ROOT
+
     _ensure_worktree(baseline_path, args.baseline_ref)
-    _ensure_worktree(fix_path, args.fix_ref)
+    if fix_path != ROOT:
+        _ensure_worktree(fix_path, args.fix_ref)
 
     env = os.environ.copy()
     report_dir = Path(args.report_dir)
