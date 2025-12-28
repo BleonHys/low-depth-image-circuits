@@ -26,16 +26,29 @@ class TestVQCMetrics(unittest.TestCase):
             states_batches,
             targets_batches,
             temperature=1.0,
+            temperature_mode="multiply",
         )
         self.assertEqual(total_samples, n_samples)
 
     def test_seed_changes_initial_params(self):
         np.random.seed(42)
-        model_a = LinearVQC(N_QUBITS=5, DEPTH=1, building_block_tag="su4", temperature=1.0)
+        model_a = LinearVQC(
+            N_QUBITS=5,
+            DEPTH=1,
+            building_block_tag="su4",
+            temperature=1.0,
+            temperature_mode="multiply",
+        )
         params_a = np.asarray(model_a.params)
 
         np.random.seed(43)
-        model_b = LinearVQC(N_QUBITS=5, DEPTH=1, building_block_tag="su4", temperature=1.0)
+        model_b = LinearVQC(
+            N_QUBITS=5,
+            DEPTH=1,
+            building_block_tag="su4",
+            temperature=1.0,
+            temperature_mode="multiply",
+        )
         params_b = np.asarray(model_b.params)
 
         self.assertFalse(np.allclose(params_a, params_b))

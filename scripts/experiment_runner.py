@@ -164,6 +164,8 @@ def _parse_vqc_metrics(run_dir: Path) -> dict | None:
             "best_val_loss": data.get("best_val_loss"),
             "best_epoch": data.get("best_epoch"),
         }
+        if "val_loss_scaled_mode" in data:
+            metrics["val_loss_scaled_mode"] = data.get("val_loss_scaled_mode")
         legacy_fields = (
             "best_val_acc_batchmean_unscaled",
             "best_val_loss_batchmean_unscaled",
@@ -399,6 +401,7 @@ def run_experiments(args) -> None:
                             vqc_optimizer = "adam"
                             vqc_lr = args.vqc_lr
                             vqc_temperature = args.vqc_temperature
+                            vqc_temperature_mode = args.vqc_temperature_mode
                             vqc_building_block = args.vqc_building_block
                             vqc_patience = args.vqc_patience
                             vqc_min_delta = args.vqc_min_delta
@@ -411,6 +414,7 @@ def run_experiments(args) -> None:
                                     "vqc_optimizer": vqc_optimizer,
                                     "vqc_lr": vqc_lr,
                                     "vqc_temperature": vqc_temperature,
+                                    "vqc_temperature_mode": vqc_temperature_mode,
                                     "vqc_building_block": vqc_building_block,
                                     "vqc_patience": vqc_patience,
                                     "vqc_min_delta": vqc_min_delta,
@@ -444,6 +448,8 @@ def run_experiments(args) -> None:
                                 str(vqc_lr),
                                 "--temperature",
                                 str(vqc_temperature),
+                                "--temperature_mode",
+                                str(vqc_temperature_mode),
                                 "--early_stopping_patience",
                                 str(vqc_patience),
                                 "--min_delta",
@@ -519,6 +525,12 @@ if __name__ == "__main__":
     parser.add_argument("--vqc_batch_size", type=int, default=100)
     parser.add_argument("--vqc_lr", type=float, default=8e-4)
     parser.add_argument("--vqc_temperature", type=float, default=1.0 / 128.0)
+    parser.add_argument(
+        "--vqc_temperature_mode",
+        type=str,
+        default="multiply",
+        choices=["multiply", "divide"],
+    )
     parser.add_argument("--vqc_building_block", type=str, default="su4")
     parser.add_argument("--vqc_patience", type=int, default=10)
     parser.add_argument("--vqc_min_delta", type=float, default=0.0)

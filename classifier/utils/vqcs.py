@@ -4,6 +4,7 @@ import pennylane as qml
 import jax
 from jax import numpy as jnp
 from jax import jit, vmap, grad
+import jax.scipy.linalg
 import numpy as np
 import optax
 import copy
@@ -32,8 +33,66 @@ def cx2_ry4(params, wires):
     qml.RY(params[2], wires=wires[0])
     qml.RY(params[3], wires=wires[1])
 
-def su4(params, wires):
+def su4_specialunitary(params, wires):
     qml.SpecialUnitary(params, wires=wires)
+
+
+_PAULI_MATS = {
+    "I": jnp.array([[1.0, 0.0], [0.0, 1.0]], dtype=jnp.complex128),
+    "X": jnp.array([[0.0, 1.0], [1.0, 0.0]], dtype=jnp.complex128),
+    "Y": jnp.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=jnp.complex128),
+    "Z": jnp.array([[1.0, 0.0], [0.0, -1.0]], dtype=jnp.complex128),
+}
+
+_PAULI_TERMS = (
+    ("I", "X"),
+    ("I", "Y"),
+    ("I", "Z"),
+    ("X", "I"),
+    ("X", "X"),
+    ("X", "Y"),
+    ("X", "Z"),
+    ("Y", "I"),
+    ("Y", "X"),
+    ("Y", "Y"),
+    ("Y", "Z"),
+    ("Z", "I"),
+    ("Z", "X"),
+    ("Z", "Y"),
+    ("Z", "Z"),
+)
+
+_PAULI_KRONS = tuple(
+    jnp.kron(_PAULI_MATS[a], _PAULI_MATS[b]) for a, b in _PAULI_TERMS
+)
+
+
+def _su4_pauli_generator_unitary(params):
+    params = jnp.asarray(params)
+    if params.shape[0] != 15:
+        raise ValueError("su4_pauli_generator expects 15 parameters.")
+    hamiltonian = jnp.zeros((4, 4), dtype=jnp.complex128)
+    for coeff, term in zip(params, _PAULI_KRONS):
+        hamiltonian = hamiltonian + coeff * term
+    return jax.scipy.linalg.expm(-1.0j * hamiltonian)
+
+
+def su4_pauli_generator(params, wires):
+    unitary = _su4_pauli_generator_unitary(params)
+    qml.QubitUnitary(unitary, wires=wires)
+
+
+def scale_logits(logits, temperature, mode):
+    if mode is None or mode == "multiply":
+        return logits * temperature
+    if mode == "divide":
+        return logits / temperature
+    raise ValueError(f"Unknown temperature_mode '{mode}'.")
+
+
+def su4(params, wires):
+    # Backwards-compatible alias for the baseline behavior.
+    su4_specialunitary(params, wires=wires)
 
 class Model(ABC):
     def __init__(self):
@@ -46,7 +105,10 @@ class Model(ABC):
     def setup(self):
         model = self.get_model()
         model_vmap = vmap(jit(model), in_axes=(None, 0))
-        cost_fn = lambda params, state, target: optax.softmax_cross_entropy_with_integer_labels(self.temperature * model(params, state), target)
+        cost_fn = lambda params, state, target: optax.softmax_cross_entropy_with_integer_labels(
+            scale_logits(model(params, state), self.temperature, self.temperature_mode),
+            target,
+        )
         cost_fn_vmap = vmap(jit(cost_fn), in_axes=(None, 0, 0))
         grad_fn = vmap(jit(grad(cost_fn)), in_axes=(None, 0, 0))
         return {
@@ -64,18 +126,23 @@ class NonLinearVQC(Model):
               use_initial_state,
               building_block_tag,
               temperature,
+              temperature_mode="multiply",
               ):
         self.N_QUBITS = N_QUBITS
         self.use_initial_state = use_initial_state
         self.DEPTH = DEPTH
         self.temperature = temperature
+        self.temperature_mode = temperature_mode
 
         if building_block_tag == "cx2_ry4":
             self.N_PARAMS_BLOCK = 4
             self.building_block = cx2_ry4
-        elif building_block_tag == "su4":
+        elif building_block_tag in {"su4", "su4_specialunitary"}:
             self.N_PARAMS_BLOCK = 15
-            self.building_block = su4
+            self.building_block = su4_specialunitary
+        elif building_block_tag == "su4_pauli_generator":
+            self.N_PARAMS_BLOCK = 15
+            self.building_block = su4_pauli_generator
         else:
             raise ValueError("Building block not implemented")
         self.N_CNOT_4RY = self.N_PARAMS_BLOCK * (N_QUBITS - 1)
@@ -176,19 +243,25 @@ class LinearVQC(Model):
               DEPTH,
               building_block_tag,
               temperature,
+              temperature_mode="multiply",
               ):
         self.N_QUBITS = N_QUBITS
         self.DEPTH = DEPTH
         self.temperature = temperature
+        self.temperature_mode = temperature_mode
         self.building_block_tag = building_block_tag
 
         if building_block_tag == "cx2_ry4":
             self.N_PARAMS_BLOCK = 4
             self.building_block = cx2_ry4
             self.N_PARAMS_FIRST_BANK = N_QUBITS
-        elif building_block_tag == "su4":
+        elif building_block_tag in {"su4", "su4_specialunitary"}:
             self.N_PARAMS_BLOCK = 15
-            self.building_block = su4
+            self.building_block = su4_specialunitary
+            self.N_PARAMS_FIRST_BANK = 0
+        elif building_block_tag == "su4_pauli_generator":
+            self.N_PARAMS_BLOCK = 15
+            self.building_block = su4_pauli_generator
             self.N_PARAMS_FIRST_BANK = 0
         else:
             raise ValueError("Building block not implemented")

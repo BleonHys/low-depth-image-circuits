@@ -16,9 +16,9 @@ import dill
 import yaml
 
 try:
-    from utils.vqcs import LinearVQC, NonLinearVQC
+    from utils.vqcs import LinearVQC, NonLinearVQC, scale_logits
 except ImportError:
-    from classifier.utils.vqcs import LinearVQC, NonLinearVQC
+    from classifier.utils.vqcs import LinearVQC, NonLinearVQC, scale_logits
 
 
 def _resolve_data_path(config):
@@ -60,7 +60,14 @@ def _load_dataset(config):
     return states, labels
 
 
-def _evaluate_scaled_metrics(predict_fn, params, states_batches, targets_batches, temperature):
+def _evaluate_scaled_metrics(
+    predict_fn,
+    params,
+    states_batches,
+    targets_batches,
+    temperature,
+    temperature_mode,
+):
     total_loss = 0.0
     total_correct = 0
     total_samples = 0
@@ -69,7 +76,7 @@ def _evaluate_scaled_metrics(predict_fn, params, states_batches, targets_batches
             continue
         preds = predict_fn(params, states)
         targets_jnp = jnp.asarray(targets)
-        logits = preds * temperature
+        logits = scale_logits(preds, temperature, temperature_mode)
         losses = optax.softmax_cross_entropy_with_integer_labels(logits, targets_jnp)
         total_loss += float(jnp.sum(losses))
         total_correct += int(jnp.sum(targets_jnp == jnp.argmax(preds, axis=1)))
@@ -241,26 +248,31 @@ class TrainingVQC:
             # Re-seed immediately before model initialization so params vary with seed.
             np.random.seed(seed)
 
+        temperature_mode = self.config.get("temperature_mode", "multiply")
+
         if self.config["model_name"] == "LinearVQC":
             model = LinearVQC(
                 N_QUBITS=self.config["n_qubits"],
                 DEPTH=self.config["depth"],
                 building_block_tag=self.config["building_block_tag"],
-                temperature=self.config["temperature"]).setup()
+                temperature=self.config["temperature"],
+                temperature_mode=temperature_mode).setup()
         elif self.config["model_name"] == "NonLinearVQC":
             model = NonLinearVQC(
                 N_QUBITS=self.config["n_qubits"],
                 DEPTH=self.config["depth"],
                 use_initial_state=False,
                 building_block_tag=self.config["building_block_tag"],
-                temperature=self.config["temperature"]).setup()
+                temperature=self.config["temperature"],
+                temperature_mode=temperature_mode).setup()
         elif self.config["model_name"] == "NonLinearVQC_shadow":
             model = NonLinearVQC(
                 N_QUBITS=self.config["n_qubits"],
                 DEPTH=self.config["depth"],
                 use_initial_state=True,
                 building_block_tag=self.config["building_block_tag"],
-                temperature=self.config["temperature"]).setup()
+                temperature=self.config["temperature"],
+                temperature_mode=temperature_mode).setup()
         else:
             raise ValueError(f"Unknown model: {self.config['model_name']}")
 
@@ -366,6 +378,7 @@ class TrainingVQC:
                     states_val_batches,
                     targets_val_batches,
                     self.config["temperature"],
+                    temperature_mode,
                 )
                 val_loss_scaled_history.append(val_loss_scaled)
                 val_acc_scaled_history.append(val_acc_scaled)
@@ -415,6 +428,7 @@ class TrainingVQC:
             "train_acc_at_best": train_acc_at_best,
             "n_params": n_params,
             "best_val_loss_scaled": best_val_loss,
+            "val_loss_scaled_mode": temperature_mode,
             "best_val_loss_batchmean_unscaled": best_val_loss_baseline if np.isfinite(best_val_loss_baseline) else None,
             "best_val_acc_batchmean_unscaled": best_val_acc_baseline,
             "best_epoch_batchmean_unscaled": best_epoch_baseline,
@@ -459,7 +473,8 @@ if __name__ == "__main__":
         "n_qubits": 11,
         "depth": 4,
         "building_block_tag": "su4",
-        "temperature": 128,
+        "temperature": 1.0 / 128.0,
+        "temperature_mode": "multiply",
         "optimizer": "adam",
         "model_name": "NonLinearVQC_shadow", # "LinearVQC", "NonLinearVQC", "NonLinearVQC_shadow"
         "dataset_name": "mnist",

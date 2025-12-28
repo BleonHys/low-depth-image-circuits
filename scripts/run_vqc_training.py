@@ -25,6 +25,7 @@ def _base_metrics(args, seed: int) -> dict:
         "best_val_loss": None,
         "best_epoch": None,
         "best_val_loss_scaled": None,
+        "val_loss_scaled_mode": args.temperature_mode,
         "runtime_seconds": None,
         "n_params": None,
         "best_val_loss_batchmean_unscaled": None,
@@ -45,6 +46,7 @@ def _base_metrics(args, seed: int) -> dict:
         "optimizer": args.optimizer,
         "lr": args.lr,
         "temperature": args.temperature,
+        "temperature_mode": args.temperature_mode,
         "error": None,
     }
 
@@ -66,6 +68,7 @@ def _run_once(args, model_name: str, run_dir: Path, seed: int) -> dict:
         "optimizer": args.optimizer,
         "learning_rate": args.lr,
         "temperature": args.temperature,
+        "temperature_mode": args.temperature_mode,
         "compression_depth": 0,
         "early_stopping_patience": args.early_stopping_patience,
         "min_delta": args.min_delta,
@@ -148,6 +151,12 @@ if __name__ == "__main__":
     parser.add_argument("--optimizer", type=str, default="adam", choices=["adam", "bfgs", "lbfgs"])
     parser.add_argument("--lr", type=float, default=8e-4)
     parser.add_argument("--temperature", type=float, default=1.0 / 128.0)
+    parser.add_argument(
+        "--temperature_mode",
+        type=str,
+        default="multiply",
+        choices=["multiply", "divide"],
+    )
     parser.add_argument("--early_stopping_patience", type=int, default=10)
     parser.add_argument("--min_delta", type=float, default=0.0)
     parser.add_argument("--restarts", type=int, default=1)

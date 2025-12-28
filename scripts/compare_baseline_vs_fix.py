@@ -254,6 +254,7 @@ def _run_vqc_job(
     vqc_batch_size: int,
     vqc_lr: float,
     vqc_temperature: float,
+    vqc_temperature_mode: str,
     vqc_building_block: str,
     vqc_patience: int,
     vqc_min_delta: float,
@@ -298,6 +299,7 @@ def _run_vqc_job(
             "vqc_optimizer": "adam",
             "vqc_lr": vqc_lr,
             "vqc_temperature": vqc_temperature,
+            "vqc_temperature_mode": vqc_temperature_mode,
             "vqc_building_block": vqc_building_block,
             "vqc_patience": vqc_patience,
             "vqc_min_delta": vqc_min_delta,
@@ -378,6 +380,7 @@ def _run_vqc_job(
         "optimizer": "adam",
         "learning_rate": vqc_lr,
         "temperature": vqc_temperature,
+        "temperature_mode": vqc_temperature_mode,
         "compression_depth": 0,
         "early_stopping_patience": vqc_patience,
         "min_delta": vqc_min_delta,
@@ -431,6 +434,7 @@ def _run_jobs(worktree_path: Path, results_dir: Path, args, env) -> None:
                     vqc_batch_size=args.vqc_batch_size,
                     vqc_lr=args.vqc_lr,
                     vqc_temperature=args.vqc_temperature,
+                    vqc_temperature_mode=args.vqc_temperature_mode,
                     vqc_building_block=args.vqc_building_block,
                     vqc_patience=args.vqc_patience,
                     vqc_min_delta=args.vqc_min_delta,
@@ -575,6 +579,12 @@ def main() -> int:
     parser.add_argument("--vqc_batch_size", type=int, default=16)
     parser.add_argument("--vqc_lr", type=float, default=0.01)
     parser.add_argument("--vqc_temperature", type=float, default=1.0)
+    parser.add_argument(
+        "--vqc_temperature_mode",
+        type=str,
+        default="multiply",
+        choices=["multiply", "divide"],
+    )
     parser.add_argument("--vqc_building_block", type=str, default="su4")
     parser.add_argument("--vqc_patience", type=int, default=10)
     parser.add_argument("--vqc_min_delta", type=float, default=0.0)
