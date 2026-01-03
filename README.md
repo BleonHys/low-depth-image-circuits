@@ -2,6 +2,46 @@
 
 This project provides a comprehensive toolset for representing image datasets as quantum circuits, optimizing them, and evaluating the impact of this optimization on classification tasks. The workflow is divided into three main stages: data preparation, quantum circuit optimization, and classification. The `plots` directory contains scripts and notebooks to visualize the results of these stages.
 
+## Quantum Computing Project Findings
+
+### Key Result: Pixel Ordering Significantly Affects VQC Classification
+
+We conducted an ablation study comparing 9 different pixel orderings for encoding images into quantum states. **Contrary to expectations, locality-preserving orderings (Morton, Hilbert) perform worst.**
+
+| Encoding | MNIST Val Accuracy |
+|----------|-------------------|
+| column_major | **41.2%** |
+| diagonal | **40.5%** |
+| row_major | 33.1% |
+| diagonal_zigzag | 29.8% |
+| corner_spiral | 27.7% |
+| snake | 27.0% |
+| vertical_snake | 24.7% |
+| hilbert | 22.8% |
+| morton | **17.8%** |
+
+This challenges the assumption in the original paper that lower entanglement entropy (achieved by Morton/Hilbert orderings) leads to better classification performance.
+
+### Where Results Are Stored
+
+All experiment results are saved in the `results/` directory:
+
+```
+results/mnist_encoding_ablation_paperlike/
+├── summary.csv          # Aggregated metrics per encoding
+├── summary.json         # Same data in JSON format
+└── <dataset_id>/<model>/fold<N>/seed<M>/
+    ├── run.json                 # Run status, config, and metrics
+    ├── metrics.json             # Detailed training metrics
+    └── training_data_epoch.csv  # Per-epoch loss/accuracy
+```
+
+**View results:**
+```bash
+python scripts/summarize_results.py --results_dir results/mnist_encoding_ablation_paperlike
+cat results/mnist_encoding_ablation_paperlike/summary.csv
+```
+
 ## Getting Started
 
 ### Prerequisites
