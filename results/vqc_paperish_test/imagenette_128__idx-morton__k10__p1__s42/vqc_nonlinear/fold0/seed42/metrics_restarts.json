@@ -1,0 +1,26 @@
+{
+  "restarts": [
+    {
+      "status": "FAILED",
+      "best_val_acc": null,
+      "best_val_loss": null,
+      "best_epoch": null,
+      "runtime_seconds": 25.140623331069946,
+      "n_params": null,
+      "seed": 42,
+      "fold": 0,
+      "dataset": "imagenette_128__idx-morton__k10__p1__s42",
+      "model": "nonlinear",
+      "building_block_tag": "su4",
+      "depth": 4,
+      "epochs": 30,
+      "batch_size": 32,
+      "optimizer": "adam",
+      "lr": 0.0008,
+      "temperature": 0.0078125,
+      "error": "RESOURCE_EXHAUSTED: Out of memory while trying to allocate 15.68GiB.",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/bleon/git/low-depth-image-circuits/scripts/run_vqc_training.py\", line 70, in _run_once\n    summary = vqc_main(config, use_ray=False) or {}\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/bleon/git/low-depth-image-circuits/classifier/utils/vqc_training.py\", line 375, in main\n    predict_fn, best_params, summary = training.train()\n                                       ^^^^^^^^^^^^^^^^\n  File \"/home/bleon/git/low-depth-image-circuits/classifier/utils/vqc_training.py\", line 299, in train\n    gradient = jnp.mean(grad_fn_vmap(params, *batch), axis=0)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\njax.errors.JaxRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 15.68GiB.\n--------------------\nFor simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.\n",
+      "restart_idx": 0
+    }
+  ]
+}

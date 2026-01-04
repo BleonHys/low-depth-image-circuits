@@ -1,0 +1,13 @@
+/home/bleon/git/low-depth-image-circuits/.venv/lib/python3.12/site-packages/keras/src/export/tf2onnx_lib.py:8: FutureWarning: In the future `np.object` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "object"):
+/home/bleon/git/low-depth-image-circuits/.venv/lib/python3.12/site-packages/pennylane/__init__.py:196: RuntimeWarning: PennyLane is not yet compatible with JAX versions > 0.6.2. You have version 0.8.2 installed. Please downgrade JAX to 0.6.2 to avoid runtime errors using python -m pip install jax~=0.6.0 jaxlib~=0.6.0
+  warnings.warn(
+usage: vqc_debug_one_batch.py [-h] --dataset DATASET [--data_dir DATA_DIR]
+                              [--fold FOLD] [--seed SEED]
+                              [--model {linear,nonlinear}] [--depth DEPTH]
+                              [--batch_size BATCH_SIZE] [--steps STEPS]
+                              [--lr LR]
+                              [--building_block_tag BUILDING_BLOCK_TAG]
+                              [--temperature TEMPERATURE]
+                              [--temperature_mode {multiply,divide}]
+vqc_debug_one_batch.py: error: the following arguments are required: --dataset

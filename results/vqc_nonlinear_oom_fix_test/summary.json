@@ -1,0 +1,14 @@
+[
+  {
+    "encoding": "row_major",
+    "model": "vqc_nonlinear",
+    "n_total_runs": 1,
+    "n_success": 1,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.10526315789473684,
+    "std_val_acc": 0.0,
+    "mean_runtime": 1805.0282459259033,
+    "stability_score": 0.10526315789473684,
+    "lps": 64.5
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "config": {
+    "tfds_name": "mnist",
+    "base_dataset": "mnist",
+    "dataset_id": "mnist__idx-hilbert__k500__p1__s42",
+    "encoding": "hilbert",
+    "model": "vqc_linear",
+    "fold": 3,
+    "seed": 42,
+    "restarts": 1,
+    "max_per_class": 500,
+    "n_patches": 1,
+    "vqc_model": "linear",
+    "vqc_depth": 4,
+    "vqc_epochs": 100,
+    "vqc_batch_size": 100,
+    "vqc_optimizer": "adam",
+    "vqc_lr": 0.0008,
+    "vqc_temperature": 0.0078125,
+    "vqc_temperature_mode": "multiply",
+    "vqc_building_block": "su4",
+    "vqc_patience": 10,
+    "vqc_min_delta": 0.0,
+    "git_commit": "4c24d0be09540569a732f4fa4c634bea3a180313",
+    "image_shape": [
+      32,
+      32
+    ],
+    "color_mode": "gray"
+  },
+  "status": "SUCCESS",
+  "metrics": {
+    "val_accuracy": 0.1000000014901161
+  },
+  "runtime_seconds": 330.65517830848694,
+  "logs": {
+    "stdout": "/home/bleon/git/low-depth-image-circuits/results/fix_eval/mnist__idx-hilbert__k500__p1__s42/vqc_linear/fold3/seed42/stdout.txt",
+    "stderr": "/home/bleon/git/low-depth-image-circuits/results/fix_eval/mnist__idx-hilbert__k500__p1__s42/vqc_linear/fold3/seed42/stderr.txt"
+  },
+  "error": null,
+  "data_split": {
+    "val_size": 1000,
+    "val_idx_hash": "e5f3a80c3b1e7054676057ea72168697f9247140f111ed33dc53e0753fbae484"
+  }
+}

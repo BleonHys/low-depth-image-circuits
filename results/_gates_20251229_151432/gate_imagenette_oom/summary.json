@@ -1,0 +1,17 @@
+[
+  {
+    "encoding": "row_major",
+    "model": "vqc_linear",
+    "n_total_runs": 1,
+    "n_success": 1,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.1,
+    "std_val_acc": 0.0,
+    "mean_val_acc_legacy_batchmean_unscaled": 0.20000000298023224,
+    "std_val_acc_legacy_batchmean_unscaled": 0.0,
+    "legacy_metric_note": "legacy comparability only",
+    "mean_runtime": 137.20463061332703,
+    "stability_score": 0.1,
+    "lps": 64.5
+  }
+]

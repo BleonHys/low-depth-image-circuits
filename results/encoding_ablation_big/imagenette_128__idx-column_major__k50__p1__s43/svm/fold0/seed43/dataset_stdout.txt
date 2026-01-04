@@ -1,0 +1,4 @@
+images processed
+Saving dataset to ./data/imagenette_128__idx-column_major__k50__p1__s43
+Encoding images as quantum states
+Saved dataset to ./data/imagenette_128__idx-column_major__k50__p1__s43

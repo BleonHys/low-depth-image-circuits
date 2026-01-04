@@ -1,0 +1,3 @@
+encoding,model,n_total_runs,n_success,success_rate,mean_val_acc,std_val_acc,mean_runtime,stability_score,lps
+row_major,svm,1,1,1.0,0.15,0.0,2.571082592010498,0.15,64.5
+morton,svm,1,1,1.0,0.15,0.0,2.5238728523254395,0.15,64.5

@@ -1,0 +1,2 @@
+Training set accuracy: 1.0
+Validation set accuracy: 0.15

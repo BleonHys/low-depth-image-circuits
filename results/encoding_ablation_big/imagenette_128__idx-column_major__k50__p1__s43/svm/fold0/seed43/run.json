@@ -1,0 +1,39 @@
+{
+  "config": {
+    "tfds_name": "imagenette/320px",
+    "base_dataset": "imagenette_128",
+    "dataset_id": "imagenette_128__idx-column_major__k50__p1__s43",
+    "encoding": "column_major",
+    "model": "svm",
+    "fold": 0,
+    "seed": 43,
+    "restarts": 1,
+    "max_per_class": 50,
+    "n_patches": 1,
+    "timestamp": "2025-12-26T15:37:03.737602Z",
+    "git_commit": "d9b3e73ad861174ce3539aa536ed8841b9f347ce",
+    "patch_shape": [
+      128,
+      128
+    ],
+    "image_shape": [
+      128,
+      128
+    ],
+    "color_mode": "rgb"
+  },
+  "status": "SUCCESS",
+  "metrics": {
+    "train_accuracy": 0.9625,
+    "val_accuracy": 0.39
+  },
+  "runtime_seconds": 2.9816246032714844,
+  "logs": {
+    "stdout": "/home/bleon/git/low-depth-image-circuits/results/encoding_ablation_big/imagenette_128__idx-column_major__k50__p1__s43/svm/fold0/seed43/stdout.txt",
+    "stderr": "/home/bleon/git/low-depth-image-circuits/results/encoding_ablation_big/imagenette_128__idx-column_major__k50__p1__s43/svm/fold0/seed43/stderr.txt"
+  },
+  "error": null,
+  "artifacts": {
+    "svm_results_dir": "/home/bleon/git/low-depth-image-circuits/classifier/_results/svm/imagenette_128__idx-column_major__k50__p1__s43_imagenette_128__idx-column_major__k50__p1__s43__f0__s43"
+  }
+}

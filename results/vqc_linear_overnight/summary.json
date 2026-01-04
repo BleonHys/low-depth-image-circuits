@@ -1,0 +1,26 @@
+[
+  {
+    "encoding": "hilbert",
+    "model": "vqc_linear",
+    "n_total_runs": 6,
+    "n_success": 6,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.11363636363636365,
+    "std_val_acc": 0.0,
+    "mean_runtime": 1198.9878429174423,
+    "stability_score": 0.11363636363636365,
+    "lps": 77.90625
+  },
+  {
+    "encoding": "row_major",
+    "model": "vqc_linear",
+    "n_total_runs": 6,
+    "n_success": 6,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.11363636363636365,
+    "std_val_acc": 0.0,
+    "mean_runtime": 1242.421192963918,
+    "stability_score": 0.11363636363636365,
+    "lps": 64.5
+  }
+]

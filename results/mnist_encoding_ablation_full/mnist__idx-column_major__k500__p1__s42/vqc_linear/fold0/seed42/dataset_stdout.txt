@@ -1,0 +1,4 @@
+images processed
+Saving dataset to ./data/mnist__idx-column_major__k500__p1__s42
+Encoding images as quantum states
+Saved dataset to ./data/mnist__idx-column_major__k500__p1__s42

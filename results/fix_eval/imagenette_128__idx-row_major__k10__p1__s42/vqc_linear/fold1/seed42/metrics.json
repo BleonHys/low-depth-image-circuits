@@ -1,0 +1,14 @@
+{
+  "status": "SUCCESS",
+  "error": null,
+  "best_val_loss": 2.302619218826294,
+  "best_val_acc": 0.1000000014901161,
+  "best_epoch": 30,
+  "train_acc_at_best": 0.125,
+  "n_params": 650,
+  "best_val_loss_batchmean_unscaled": 2.290533304214477,
+  "best_val_acc_batchmean_unscaled": 0.125,
+  "best_epoch_batchmean_unscaled": 3,
+  "train_acc_at_best_batchmean_unscaled": 0.125,
+  "runtime_seconds": 211.6061770915985
+}

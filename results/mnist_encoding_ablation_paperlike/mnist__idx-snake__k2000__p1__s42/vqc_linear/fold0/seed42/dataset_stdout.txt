@@ -1,0 +1,4 @@
+images processed
+Saving dataset to ./data/mnist__idx-snake__k2000__p1__s42
+Encoding images as quantum states
+Saved dataset to ./data/mnist__idx-snake__k2000__p1__s42

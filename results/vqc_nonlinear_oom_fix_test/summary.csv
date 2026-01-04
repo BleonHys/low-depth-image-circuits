@@ -1,0 +1,2 @@
+encoding,model,n_total_runs,n_success,success_rate,mean_val_acc,std_val_acc,mean_runtime,stability_score,lps
+row_major,vqc_nonlinear,1,1,1.0,0.10526315789473684,0.0,1805.0282459259033,0.10526315789473684,64.5

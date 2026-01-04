@@ -1,0 +1,110 @@
+[
+  {
+    "encoding": "morton",
+    "model": "svm",
+    "n_total_runs": 10,
+    "n_success": 10,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.322,
+    "std_val_acc": 0.0530659966456864,
+    "mean_runtime": 3.0001208782196045,
+    "stability_score": 0.322,
+    "lps": 64.5
+  },
+  {
+    "encoding": "hilbert",
+    "model": "svm",
+    "n_total_runs": 10,
+    "n_success": 10,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.322,
+    "std_val_acc": 0.0530659966456864,
+    "mean_runtime": 3.0202922344207765,
+    "stability_score": 0.322,
+    "lps": 77.90625
+  },
+  {
+    "encoding": "row_major",
+    "model": "svm",
+    "n_total_runs": 10,
+    "n_success": 10,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.322,
+    "std_val_acc": 0.0530659966456864,
+    "mean_runtime": 3.096266007423401,
+    "stability_score": 0.322,
+    "lps": 64.5
+  },
+  {
+    "encoding": "column_major",
+    "model": "svm",
+    "n_total_runs": 10,
+    "n_success": 10,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.322,
+    "std_val_acc": 0.0530659966456864,
+    "mean_runtime": 2.995020318031311,
+    "stability_score": 0.322,
+    "lps": 64.5
+  },
+  {
+    "encoding": "snake",
+    "model": "svm",
+    "n_total_runs": 10,
+    "n_success": 10,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.322,
+    "std_val_acc": 0.0530659966456864,
+    "mean_runtime": 3.031723403930664,
+    "stability_score": 0.322,
+    "lps": 64.5
+  },
+  {
+    "encoding": "corner_spiral",
+    "model": "svm",
+    "n_total_runs": 10,
+    "n_success": 10,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.322,
+    "std_val_acc": 0.0530659966456864,
+    "mean_runtime": 3.000117826461792,
+    "stability_score": 0.322,
+    "lps": 168.515625
+  },
+  {
+    "encoding": "diagonal",
+    "model": "svm",
+    "n_total_runs": 10,
+    "n_success": 10,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.322,
+    "std_val_acc": 0.0530659966456864,
+    "mean_runtime": 3.0559828758239744,
+    "stability_score": 0.322,
+    "lps": 85.5
+  },
+  {
+    "encoding": "diagonal_zigzag",
+    "model": "svm",
+    "n_total_runs": 10,
+    "n_success": 10,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.322,
+    "std_val_acc": 0.0530659966456864,
+    "mean_runtime": 3.060024785995483,
+    "stability_score": 0.322,
+    "lps": 85.5
+  },
+  {
+    "encoding": "vertical_snake",
+    "model": "svm",
+    "n_total_runs": 10,
+    "n_success": 10,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.322,
+    "std_val_acc": 0.0530659966456864,
+    "mean_runtime": 3.0055840730667116,
+    "stability_score": 0.322,
+    "lps": 64.5
+  }
+]

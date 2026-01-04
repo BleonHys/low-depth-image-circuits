@@ -1,0 +1,44 @@
+{
+  "config": {
+    "tfds_name": "imagenette/320px",
+    "base_dataset": "imagenette_128",
+    "dataset_id": "imagenette_128__idx-row_major__k10__p1__s42",
+    "encoding": "row_major",
+    "model": "vqc_linear",
+    "fold": 0,
+    "seed": 42,
+    "restarts": 1,
+    "max_per_class": 10,
+    "n_patches": 1,
+    "vqc_model": "linear",
+    "vqc_depth": 2,
+    "vqc_epochs": 30,
+    "vqc_batch_size": 16,
+    "vqc_optimizer": "adam",
+    "vqc_lr": 0.01,
+    "vqc_temperature": 1.0,
+    "vqc_building_block": "su4",
+    "vqc_patience": 10,
+    "vqc_min_delta": 0.0,
+    "git_commit": "428194f3302fa08f4e85a672b54937a500a08b98",
+    "image_shape": [
+      128,
+      128
+    ],
+    "color_mode": "rgb"
+  },
+  "status": "SUCCESS",
+  "metrics": {
+    "val_accuracy": 0.1000000014901161
+  },
+  "runtime_seconds": 230.30412983894348,
+  "logs": {
+    "stdout": "/home/bleon/git/low-depth-image-circuits/results/fix_eval/imagenette_128__idx-row_major__k10__p1__s42/vqc_linear/fold0/seed42/stdout.txt",
+    "stderr": "/home/bleon/git/low-depth-image-circuits/results/fix_eval/imagenette_128__idx-row_major__k10__p1__s42/vqc_linear/fold0/seed42/stderr.txt"
+  },
+  "error": null,
+  "data_split": {
+    "val_size": 20,
+    "val_idx_hash": "6f3a05ef7b605c6a374cec199a7cafd37c86b4292d50408ad328b7f9d09f3fa1"
+  }
+}

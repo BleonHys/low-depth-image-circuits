@@ -1,0 +1,5 @@
+/home/bleon/git/low-depth-image-circuits/scripts/experiment_runner.py:237: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "timestamp": datetime.utcnow().isoformat() + "Z",
+[encoding=row_major model=vqc_linear fold=0 seed=42] dataset ready
+[encoding=row_major model=vqc_linear fold=0 seed=42] training started
+[encoding=row_major model=vqc_linear fold=0 seed=42] finished

@@ -1,0 +1,25 @@
+{
+  "restarts": [
+    {
+      "status": "SUCCESS",
+      "best_val_acc": 0.20000000298023224,
+      "best_val_loss": 2.2949190157619204,
+      "best_epoch": 29,
+      "runtime_seconds": 255.7859652042389,
+      "n_params": 1130,
+      "seed": 42,
+      "fold": 0,
+      "dataset": "imagenette_128__idx-row_major__k10__p1__s42",
+      "model": "linear",
+      "building_block_tag": "su4",
+      "depth": 4,
+      "epochs": 30,
+      "batch_size": 32,
+      "optimizer": "adam",
+      "lr": 0.0008,
+      "temperature": 0.0078125,
+      "error": null,
+      "restart_idx": 0
+    }
+  ]
+}

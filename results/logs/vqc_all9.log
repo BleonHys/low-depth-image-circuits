@@ -1,0 +1,58 @@
+
+================================================================================
+SANITY CHECKS
+================================================================================
+Repo: /home/bleon/git/low-depth-image-circuits
+Python: Python 3.12.3
+GPU:
+Fri Dec 26 19:43:11 2025       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.95.05              Driver Version: 580.95.05      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070        Off |   00000000:2D:00.0  On |                  N/A |
+|  0%   38C    P0             19W /  250W |     676MiB /  12227MiB |      2%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            2216      G   /usr/lib/xorg/Xorg                      219MiB |
+|    0   N/A  N/A            2498      G   /usr/bin/gnome-shell                     72MiB |
+JAX devices:
+[CudaDevice(id=0)]
+Available encodings:
+['column_major', 'corner_spiral', 'diagonal', 'diagonal_zigzag', 'hilbert', 'morton', 'row_major', 'snake', 'vertical_snake']
+Data dir exists?
+drwxrwxr-x 25 bleon bleon 4096 Dec 26 18:19 data
+Results dir: results/encoding_ablation_vqc_all9
+
+================================================================================
+PILOT (small, but full stack): 2 encodings, 1 fold, 1 seed, both VQC models
+================================================================================
+/home/bleon/git/low-depth-image-circuits/scripts/experiment_runner.py:221: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "timestamp": datetime.utcnow().isoformat() + "Z",
+Wrote results/encoding_ablation_vqc_all9/summary.csv
+Wrote results/encoding_ablation_vqc_all9/summary.json
+
+Top of summary.csv:
+encoding   model          n_total_runs  n_success  success_rate  mean_val_acc  std_val_acc  mean_runtime       stability_score  lps
+row_major  vqc_linear     1             1          1.0           0.125         0.0          100.2048978805542  0.125            64.5
+row_major  vqc_nonlinear  1             1          1.0           0.125         0.0          425.0951805114746  0.125            64.5
+morton     vqc_linear     1             1          1.0           0.125         0.0          95.61930203437805  0.125            64.5
+morton     vqc_nonlinear  1             1          1.0           0.125         0.0          670.7868003845215  0.125            64.5
+Run.json count: 4
+('vqc_linear', 'SUCCESS'): 2
+('vqc_nonlinear', 'SUCCESS'): 2
+
+================================================================================
+FULL BLOCK A: VQC_LINEAR on ALL 9 encodings (5 folds, 2 seeds)
+================================================================================
+/home/bleon/git/low-depth-image-circuits/scripts/experiment_runner.py:221: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "timestamp": datetime.utcnow().isoformat() + "Z",

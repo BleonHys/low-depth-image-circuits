@@ -1,0 +1,56 @@
+{
+  "config": {
+    "tfds_name": "mnist",
+    "base_dataset": "mnist",
+    "dataset_id": "mnist__idx-snake__k500__p1__s42",
+    "encoding": "snake",
+    "model": "vqc_linear",
+    "fold": 4,
+    "seed": 42,
+    "restarts": 1,
+    "max_per_class": 500,
+    "n_patches": 1,
+    "timestamp": "2025-12-30T22:13:13.957374Z",
+    "git_commit": "4c24d0be09540569a732f4fa4c634bea3a180313",
+    "patch_shape": [
+      32,
+      32
+    ],
+    "image_shape": [
+      32,
+      32
+    ],
+    "color_mode": "gray",
+    "vqc_model": "linear",
+    "vqc_depth": 4,
+    "vqc_epochs": 100,
+    "vqc_batch_size": 100,
+    "vqc_optimizer": "adam",
+    "vqc_lr": 0.0008,
+    "vqc_temperature": 0.0078125,
+    "vqc_temperature_mode": "divide",
+    "vqc_building_block": "su4",
+    "vqc_patience": 10,
+    "vqc_min_delta": 0.0,
+    "vqc_restarts": 1
+  },
+  "status": "SUCCESS",
+  "metrics": {
+    "val_accuracy": 0.231,
+    "best_val_acc": 0.231,
+    "best_val_loss": 2.179595341750178,
+    "best_epoch": 26,
+    "val_loss_scaled_mode": "divide",
+    "best_val_acc_batchmean_unscaled": 0.23692306895286608,
+    "best_val_loss_batchmean_unscaled": 2.3006286044365254,
+    "best_epoch_batchmean_unscaled": 26,
+    "train_acc_at_best_batchmean_unscaled": 0.040769229332605995
+  },
+  "runtime_seconds": 285.0752053260803,
+  "logs": {
+    "stdout": "/home/bleon/git/low-depth-image-circuits/results/mnist_encoding_ablation_full/mnist__idx-snake__k500__p1__s42/vqc_linear/fold4/seed42/stdout.txt",
+    "stderr": "/home/bleon/git/low-depth-image-circuits/results/mnist_encoding_ablation_full/mnist__idx-snake__k500__p1__s42/vqc_linear/fold4/seed42/stderr.txt"
+  },
+  "error": null,
+  "artifacts": {}
+}

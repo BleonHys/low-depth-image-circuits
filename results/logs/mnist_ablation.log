@@ -1,0 +1,273 @@
+nohup: ignoring input
+/home/bleon/git/low-depth-image-circuits/scripts/experiment_runner.py:237: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "timestamp": datetime.utcnow().isoformat() + "Z",
+[encoding=row_major model=vqc_linear fold=0 seed=42] dataset ready
+[encoding=row_major model=vqc_linear fold=0 seed=42] training started
+[encoding=row_major model=vqc_linear fold=0 seed=42] finished
+[encoding=row_major model=vqc_linear fold=0 seed=43] dataset ready
+[encoding=row_major model=vqc_linear fold=0 seed=43] training started
+[encoding=row_major model=vqc_linear fold=0 seed=43] finished
+[encoding=row_major model=vqc_linear fold=1 seed=42] dataset ready
+[encoding=row_major model=vqc_linear fold=1 seed=42] training started
+[encoding=row_major model=vqc_linear fold=1 seed=42] finished
+[encoding=row_major model=vqc_linear fold=1 seed=43] dataset ready
+[encoding=row_major model=vqc_linear fold=1 seed=43] training started
+[encoding=row_major model=vqc_linear fold=1 seed=43] finished
+[encoding=row_major model=vqc_linear fold=2 seed=42] dataset ready
+[encoding=row_major model=vqc_linear fold=2 seed=42] training started
+[encoding=row_major model=vqc_linear fold=2 seed=42] finished
+[encoding=row_major model=vqc_linear fold=2 seed=43] dataset ready
+[encoding=row_major model=vqc_linear fold=2 seed=43] training started
+[encoding=row_major model=vqc_linear fold=2 seed=43] finished
+[encoding=row_major model=vqc_linear fold=3 seed=42] dataset ready
+[encoding=row_major model=vqc_linear fold=3 seed=42] training started
+[encoding=row_major model=vqc_linear fold=3 seed=42] finished
+[encoding=row_major model=vqc_linear fold=3 seed=43] dataset ready
+[encoding=row_major model=vqc_linear fold=3 seed=43] training started
+[encoding=row_major model=vqc_linear fold=3 seed=43] finished
+[encoding=row_major model=vqc_linear fold=4 seed=42] dataset ready
+[encoding=row_major model=vqc_linear fold=4 seed=42] training started
+[encoding=row_major model=vqc_linear fold=4 seed=42] finished
+[encoding=row_major model=vqc_linear fold=4 seed=43] dataset ready
+[encoding=row_major model=vqc_linear fold=4 seed=43] training started
+[encoding=row_major model=vqc_linear fold=4 seed=43] finished
+[encoding=column_major model=vqc_linear fold=0 seed=42] dataset generating
+[encoding=column_major model=vqc_linear fold=0 seed=42] training started
+[encoding=column_major model=vqc_linear fold=0 seed=42] finished
+[encoding=column_major model=vqc_linear fold=0 seed=43] dataset generating
+[encoding=column_major model=vqc_linear fold=0 seed=43] training started
+[encoding=column_major model=vqc_linear fold=0 seed=43] finished
+[encoding=column_major model=vqc_linear fold=1 seed=42] dataset ready
+[encoding=column_major model=vqc_linear fold=1 seed=42] training started
+[encoding=column_major model=vqc_linear fold=1 seed=42] finished
+[encoding=column_major model=vqc_linear fold=1 seed=43] dataset ready
+[encoding=column_major model=vqc_linear fold=1 seed=43] training started
+[encoding=column_major model=vqc_linear fold=1 seed=43] finished
+[encoding=column_major model=vqc_linear fold=2 seed=42] dataset ready
+[encoding=column_major model=vqc_linear fold=2 seed=42] training started
+[encoding=column_major model=vqc_linear fold=2 seed=42] finished
+[encoding=column_major model=vqc_linear fold=2 seed=43] dataset ready
+[encoding=column_major model=vqc_linear fold=2 seed=43] training started
+[encoding=column_major model=vqc_linear fold=2 seed=43] finished
+[encoding=column_major model=vqc_linear fold=3 seed=42] dataset ready
+[encoding=column_major model=vqc_linear fold=3 seed=42] training started
+[encoding=column_major model=vqc_linear fold=3 seed=42] finished
+[encoding=column_major model=vqc_linear fold=3 seed=43] dataset ready
+[encoding=column_major model=vqc_linear fold=3 seed=43] training started
+[encoding=column_major model=vqc_linear fold=3 seed=43] finished
+[encoding=column_major model=vqc_linear fold=4 seed=42] dataset ready
+[encoding=column_major model=vqc_linear fold=4 seed=42] training started
+[encoding=column_major model=vqc_linear fold=4 seed=42] finished
+[encoding=column_major model=vqc_linear fold=4 seed=43] dataset ready
+[encoding=column_major model=vqc_linear fold=4 seed=43] training started
+[encoding=column_major model=vqc_linear fold=4 seed=43] finished
+[encoding=snake model=vqc_linear fold=0 seed=42] dataset generating
+[encoding=snake model=vqc_linear fold=0 seed=42] training started
+[encoding=snake model=vqc_linear fold=0 seed=42] finished
+[encoding=snake model=vqc_linear fold=0 seed=43] dataset generating
+[encoding=snake model=vqc_linear fold=0 seed=43] training started
+[encoding=snake model=vqc_linear fold=0 seed=43] finished
+[encoding=snake model=vqc_linear fold=1 seed=42] dataset ready
+[encoding=snake model=vqc_linear fold=1 seed=42] training started
+[encoding=snake model=vqc_linear fold=1 seed=42] finished
+[encoding=snake model=vqc_linear fold=1 seed=43] dataset ready
+[encoding=snake model=vqc_linear fold=1 seed=43] training started
+[encoding=snake model=vqc_linear fold=1 seed=43] finished
+[encoding=snake model=vqc_linear fold=2 seed=42] dataset ready
+[encoding=snake model=vqc_linear fold=2 seed=42] training started
+[encoding=snake model=vqc_linear fold=2 seed=42] finished
+[encoding=snake model=vqc_linear fold=2 seed=43] dataset ready
+[encoding=snake model=vqc_linear fold=2 seed=43] training started
+[encoding=snake model=vqc_linear fold=2 seed=43] finished
+[encoding=snake model=vqc_linear fold=3 seed=42] dataset ready
+[encoding=snake model=vqc_linear fold=3 seed=42] training started
+[encoding=snake model=vqc_linear fold=3 seed=42] finished
+[encoding=snake model=vqc_linear fold=3 seed=43] dataset ready
+[encoding=snake model=vqc_linear fold=3 seed=43] training started
+[encoding=snake model=vqc_linear fold=3 seed=43] finished
+[encoding=snake model=vqc_linear fold=4 seed=42] dataset ready
+[encoding=snake model=vqc_linear fold=4 seed=42] training started
+[encoding=snake model=vqc_linear fold=4 seed=42] finished
+[encoding=snake model=vqc_linear fold=4 seed=43] dataset ready
+[encoding=snake model=vqc_linear fold=4 seed=43] training started
+[encoding=snake model=vqc_linear fold=4 seed=43] finished
+[encoding=vertical_snake model=vqc_linear fold=0 seed=42] dataset generating
+[encoding=vertical_snake model=vqc_linear fold=0 seed=42] training started
+[encoding=vertical_snake model=vqc_linear fold=0 seed=42] finished
+[encoding=vertical_snake model=vqc_linear fold=0 seed=43] dataset generating
+[encoding=vertical_snake model=vqc_linear fold=0 seed=43] training started
+[encoding=vertical_snake model=vqc_linear fold=0 seed=43] finished
+[encoding=vertical_snake model=vqc_linear fold=1 seed=42] dataset ready
+[encoding=vertical_snake model=vqc_linear fold=1 seed=42] training started
+[encoding=vertical_snake model=vqc_linear fold=1 seed=42] finished
+[encoding=vertical_snake model=vqc_linear fold=1 seed=43] dataset ready
+[encoding=vertical_snake model=vqc_linear fold=1 seed=43] training started
+[encoding=vertical_snake model=vqc_linear fold=1 seed=43] finished
+[encoding=vertical_snake model=vqc_linear fold=2 seed=42] dataset ready
+[encoding=vertical_snake model=vqc_linear fold=2 seed=42] training started
+[encoding=vertical_snake model=vqc_linear fold=2 seed=42] finished
+[encoding=vertical_snake model=vqc_linear fold=2 seed=43] dataset ready
+[encoding=vertical_snake model=vqc_linear fold=2 seed=43] training started
+[encoding=vertical_snake model=vqc_linear fold=2 seed=43] finished
+[encoding=vertical_snake model=vqc_linear fold=3 seed=42] dataset ready
+[encoding=vertical_snake model=vqc_linear fold=3 seed=42] training started
+[encoding=vertical_snake model=vqc_linear fold=3 seed=42] finished
+[encoding=vertical_snake model=vqc_linear fold=3 seed=43] dataset ready
+[encoding=vertical_snake model=vqc_linear fold=3 seed=43] training started
+[encoding=vertical_snake model=vqc_linear fold=3 seed=43] finished
+[encoding=vertical_snake model=vqc_linear fold=4 seed=42] dataset ready
+[encoding=vertical_snake model=vqc_linear fold=4 seed=42] training started
+[encoding=vertical_snake model=vqc_linear fold=4 seed=42] finished
+[encoding=vertical_snake model=vqc_linear fold=4 seed=43] dataset ready
+[encoding=vertical_snake model=vqc_linear fold=4 seed=43] training started
+[encoding=vertical_snake model=vqc_linear fold=4 seed=43] finished
+[encoding=diagonal model=vqc_linear fold=0 seed=42] dataset generating
+[encoding=diagonal model=vqc_linear fold=0 seed=42] training started
+[encoding=diagonal model=vqc_linear fold=0 seed=42] finished
+[encoding=diagonal model=vqc_linear fold=0 seed=43] dataset generating
+[encoding=diagonal model=vqc_linear fold=0 seed=43] training started
+[encoding=diagonal model=vqc_linear fold=0 seed=43] finished
+[encoding=diagonal model=vqc_linear fold=1 seed=42] dataset ready
+[encoding=diagonal model=vqc_linear fold=1 seed=42] training started
+[encoding=diagonal model=vqc_linear fold=1 seed=42] finished
+[encoding=diagonal model=vqc_linear fold=1 seed=43] dataset ready
+[encoding=diagonal model=vqc_linear fold=1 seed=43] training started
+[encoding=diagonal model=vqc_linear fold=1 seed=43] finished
+[encoding=diagonal model=vqc_linear fold=2 seed=42] dataset ready
+[encoding=diagonal model=vqc_linear fold=2 seed=42] training started
+[encoding=diagonal model=vqc_linear fold=2 seed=42] finished
+[encoding=diagonal model=vqc_linear fold=2 seed=43] dataset ready
+[encoding=diagonal model=vqc_linear fold=2 seed=43] training started
+[encoding=diagonal model=vqc_linear fold=2 seed=43] finished
+[encoding=diagonal model=vqc_linear fold=3 seed=42] dataset ready
+[encoding=diagonal model=vqc_linear fold=3 seed=42] training started
+[encoding=diagonal model=vqc_linear fold=3 seed=42] finished
+[encoding=diagonal model=vqc_linear fold=3 seed=43] dataset ready
+[encoding=diagonal model=vqc_linear fold=3 seed=43] training started
+[encoding=diagonal model=vqc_linear fold=3 seed=43] finished
+[encoding=diagonal model=vqc_linear fold=4 seed=42] dataset ready
+[encoding=diagonal model=vqc_linear fold=4 seed=42] training started
+[encoding=diagonal model=vqc_linear fold=4 seed=42] finished
+[encoding=diagonal model=vqc_linear fold=4 seed=43] dataset ready
+[encoding=diagonal model=vqc_linear fold=4 seed=43] training started
+[encoding=diagonal model=vqc_linear fold=4 seed=43] finished
+[encoding=diagonal_zigzag model=vqc_linear fold=0 seed=42] dataset generating
+[encoding=diagonal_zigzag model=vqc_linear fold=0 seed=42] training started
+[encoding=diagonal_zigzag model=vqc_linear fold=0 seed=42] finished
+[encoding=diagonal_zigzag model=vqc_linear fold=0 seed=43] dataset generating
+[encoding=diagonal_zigzag model=vqc_linear fold=0 seed=43] training started
+[encoding=diagonal_zigzag model=vqc_linear fold=0 seed=43] finished
+[encoding=diagonal_zigzag model=vqc_linear fold=1 seed=42] dataset ready
+[encoding=diagonal_zigzag model=vqc_linear fold=1 seed=42] training started
+[encoding=diagonal_zigzag model=vqc_linear fold=1 seed=42] finished
+[encoding=diagonal_zigzag model=vqc_linear fold=1 seed=43] dataset ready
+[encoding=diagonal_zigzag model=vqc_linear fold=1 seed=43] training started
+[encoding=diagonal_zigzag model=vqc_linear fold=1 seed=43] finished
+[encoding=diagonal_zigzag model=vqc_linear fold=2 seed=42] dataset ready
+[encoding=diagonal_zigzag model=vqc_linear fold=2 seed=42] training started
+[encoding=diagonal_zigzag model=vqc_linear fold=2 seed=42] finished
+[encoding=diagonal_zigzag model=vqc_linear fold=2 seed=43] dataset ready
+[encoding=diagonal_zigzag model=vqc_linear fold=2 seed=43] training started
+[encoding=diagonal_zigzag model=vqc_linear fold=2 seed=43] finished
+[encoding=diagonal_zigzag model=vqc_linear fold=3 seed=42] dataset ready
+[encoding=diagonal_zigzag model=vqc_linear fold=3 seed=42] training started
+[encoding=diagonal_zigzag model=vqc_linear fold=3 seed=42] finished
+[encoding=diagonal_zigzag model=vqc_linear fold=3 seed=43] dataset ready
+[encoding=diagonal_zigzag model=vqc_linear fold=3 seed=43] training started
+[encoding=diagonal_zigzag model=vqc_linear fold=3 seed=43] finished
+[encoding=diagonal_zigzag model=vqc_linear fold=4 seed=42] dataset ready
+[encoding=diagonal_zigzag model=vqc_linear fold=4 seed=42] training started
+[encoding=diagonal_zigzag model=vqc_linear fold=4 seed=42] finished
+[encoding=diagonal_zigzag model=vqc_linear fold=4 seed=43] dataset ready
+[encoding=diagonal_zigzag model=vqc_linear fold=4 seed=43] training started
+[encoding=diagonal_zigzag model=vqc_linear fold=4 seed=43] finished
+[encoding=corner_spiral model=vqc_linear fold=0 seed=42] dataset generating
+[encoding=corner_spiral model=vqc_linear fold=0 seed=42] training started
+[encoding=corner_spiral model=vqc_linear fold=0 seed=42] finished
+[encoding=corner_spiral model=vqc_linear fold=0 seed=43] dataset generating
+[encoding=corner_spiral model=vqc_linear fold=0 seed=43] training started
+[encoding=corner_spiral model=vqc_linear fold=0 seed=43] finished
+[encoding=corner_spiral model=vqc_linear fold=1 seed=42] dataset ready
+[encoding=corner_spiral model=vqc_linear fold=1 seed=42] training started
+[encoding=corner_spiral model=vqc_linear fold=1 seed=42] finished
+[encoding=corner_spiral model=vqc_linear fold=1 seed=43] dataset ready
+[encoding=corner_spiral model=vqc_linear fold=1 seed=43] training started
+[encoding=corner_spiral model=vqc_linear fold=1 seed=43] finished
+[encoding=corner_spiral model=vqc_linear fold=2 seed=42] dataset ready
+[encoding=corner_spiral model=vqc_linear fold=2 seed=42] training started
+[encoding=corner_spiral model=vqc_linear fold=2 seed=42] finished
+[encoding=corner_spiral model=vqc_linear fold=2 seed=43] dataset ready
+[encoding=corner_spiral model=vqc_linear fold=2 seed=43] training started
+[encoding=corner_spiral model=vqc_linear fold=2 seed=43] finished
+[encoding=corner_spiral model=vqc_linear fold=3 seed=42] dataset ready
+[encoding=corner_spiral model=vqc_linear fold=3 seed=42] training started
+[encoding=corner_spiral model=vqc_linear fold=3 seed=42] finished
+[encoding=corner_spiral model=vqc_linear fold=3 seed=43] dataset ready
+[encoding=corner_spiral model=vqc_linear fold=3 seed=43] training started
+[encoding=corner_spiral model=vqc_linear fold=3 seed=43] finished
+[encoding=corner_spiral model=vqc_linear fold=4 seed=42] dataset ready
+[encoding=corner_spiral model=vqc_linear fold=4 seed=42] training started
+[encoding=corner_spiral model=vqc_linear fold=4 seed=42] finished
+[encoding=corner_spiral model=vqc_linear fold=4 seed=43] dataset ready
+[encoding=corner_spiral model=vqc_linear fold=4 seed=43] training started
+[encoding=corner_spiral model=vqc_linear fold=4 seed=43] finished
+[encoding=morton model=vqc_linear fold=0 seed=42] dataset generating
+[encoding=morton model=vqc_linear fold=0 seed=42] training started
+[encoding=morton model=vqc_linear fold=0 seed=42] finished
+[encoding=morton model=vqc_linear fold=0 seed=43] dataset generating
+[encoding=morton model=vqc_linear fold=0 seed=43] training started
+[encoding=morton model=vqc_linear fold=0 seed=43] finished
+[encoding=morton model=vqc_linear fold=1 seed=42] dataset ready
+[encoding=morton model=vqc_linear fold=1 seed=42] training started
+[encoding=morton model=vqc_linear fold=1 seed=42] finished
+[encoding=morton model=vqc_linear fold=1 seed=43] dataset ready
+[encoding=morton model=vqc_linear fold=1 seed=43] training started
+[encoding=morton model=vqc_linear fold=1 seed=43] finished
+[encoding=morton model=vqc_linear fold=2 seed=42] dataset ready
+[encoding=morton model=vqc_linear fold=2 seed=42] training started
+[encoding=morton model=vqc_linear fold=2 seed=42] finished
+[encoding=morton model=vqc_linear fold=2 seed=43] dataset ready
+[encoding=morton model=vqc_linear fold=2 seed=43] training started
+[encoding=morton model=vqc_linear fold=2 seed=43] finished
+[encoding=morton model=vqc_linear fold=3 seed=42] dataset ready
+[encoding=morton model=vqc_linear fold=3 seed=42] training started
+[encoding=morton model=vqc_linear fold=3 seed=42] finished
+[encoding=morton model=vqc_linear fold=3 seed=43] dataset ready
+[encoding=morton model=vqc_linear fold=3 seed=43] training started
+[encoding=morton model=vqc_linear fold=3 seed=43] finished
+[encoding=morton model=vqc_linear fold=4 seed=42] dataset ready
+[encoding=morton model=vqc_linear fold=4 seed=42] training started
+[encoding=morton model=vqc_linear fold=4 seed=42] finished
+[encoding=morton model=vqc_linear fold=4 seed=43] dataset ready
+[encoding=morton model=vqc_linear fold=4 seed=43] training started
+[encoding=morton model=vqc_linear fold=4 seed=43] finished
+[encoding=hilbert model=vqc_linear fold=0 seed=42] dataset ready
+[encoding=hilbert model=vqc_linear fold=0 seed=42] training started
+[encoding=hilbert model=vqc_linear fold=0 seed=42] finished
+[encoding=hilbert model=vqc_linear fold=0 seed=43] dataset ready
+[encoding=hilbert model=vqc_linear fold=0 seed=43] training started
+[encoding=hilbert model=vqc_linear fold=0 seed=43] finished
+[encoding=hilbert model=vqc_linear fold=1 seed=42] dataset ready
+[encoding=hilbert model=vqc_linear fold=1 seed=42] training started
+[encoding=hilbert model=vqc_linear fold=1 seed=42] finished
+[encoding=hilbert model=vqc_linear fold=1 seed=43] dataset ready
+[encoding=hilbert model=vqc_linear fold=1 seed=43] training started
+[encoding=hilbert model=vqc_linear fold=1 seed=43] finished
+[encoding=hilbert model=vqc_linear fold=2 seed=42] dataset ready
+[encoding=hilbert model=vqc_linear fold=2 seed=42] training started
+[encoding=hilbert model=vqc_linear fold=2 seed=42] finished
+[encoding=hilbert model=vqc_linear fold=2 seed=43] dataset ready
+[encoding=hilbert model=vqc_linear fold=2 seed=43] training started
+[encoding=hilbert model=vqc_linear fold=2 seed=43] finished
+[encoding=hilbert model=vqc_linear fold=3 seed=42] dataset ready
+[encoding=hilbert model=vqc_linear fold=3 seed=42] training started
+[encoding=hilbert model=vqc_linear fold=3 seed=42] finished
+[encoding=hilbert model=vqc_linear fold=3 seed=43] dataset ready
+[encoding=hilbert model=vqc_linear fold=3 seed=43] training started
+[encoding=hilbert model=vqc_linear fold=3 seed=43] finished
+[encoding=hilbert model=vqc_linear fold=4 seed=42] dataset ready
+[encoding=hilbert model=vqc_linear fold=4 seed=42] training started
+[encoding=hilbert model=vqc_linear fold=4 seed=42] finished
+[encoding=hilbert model=vqc_linear fold=4 seed=43] dataset ready
+[encoding=hilbert model=vqc_linear fold=4 seed=43] training started
+[encoding=hilbert model=vqc_linear fold=4 seed=43] finished

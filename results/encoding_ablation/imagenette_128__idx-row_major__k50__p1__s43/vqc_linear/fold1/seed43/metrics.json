@@ -1,0 +1,20 @@
+{
+  "status": "FAILED",
+  "best_val_acc": null,
+  "best_val_loss": null,
+  "best_epoch": null,
+  "runtime_seconds": 698.6334671974182,
+  "n_params": null,
+  "seed": 43,
+  "fold": 1,
+  "dataset": "imagenette_128__idx-row_major__k50__p1__s43",
+  "model": "linear",
+  "building_block_tag": "su4",
+  "depth": 2,
+  "epochs": 30,
+  "batch_size": 16,
+  "optimizer": "adam",
+  "lr": 0.01,
+  "temperature": 1.0,
+  "error": "list index out of range"
+}

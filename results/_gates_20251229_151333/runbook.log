@@ -1,0 +1,69 @@
+[RUNBOOK] start: Mon Dec 29 03:13:33 PM CET 2025
+[RUNBOOK] root:  results/_gates_20251229_151333
+[RUNBOOK] pwd:   /home/bleon/git/low-depth-image-circuits
+[RUNBOOK] python: Python 3.12.3
+
+=== (0) GPU sanity ===
+jax.devices(): [CudaDevice(id=0)]
+
+=== (1) pytest ===
+
+==================================== ERRORS ====================================
+_________________ ERROR collecting tests/test_permutations.py __________________
+ImportError while importing test module '/home/bleon/git/low-depth-image-circuits/tests/test_permutations.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_permutations.py:4: in <module>
+    from circuit_optimization.encodings.registry import get_permutation, inverse_permutation, list_encodings
+E   ModuleNotFoundError: No module named 'circuit_optimization'
+__________________ ERROR collecting tests/test_vqc_blocks.py ___________________
+ImportError while importing test module '/home/bleon/git/low-depth-image-circuits/tests/test_vqc_blocks.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_vqc_blocks.py:4: in <module>
+    from classifier.utils.vqcs import _su4_pauli_generator_unitary, scale_logits
+E   ModuleNotFoundError: No module named 'classifier'
+______________ ERROR collecting tests/test_vqc_early_stopping.py _______________
+ImportError while importing test module '/home/bleon/git/low-depth-image-circuits/tests/test_vqc_early_stopping.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_vqc_early_stopping.py:9: in <module>
+    from classifier.utils import vqc_training
+E   ModuleNotFoundError: No module named 'classifier'
+__________________ ERROR collecting tests/test_vqc_metrics.py __________________
+ImportError while importing test module '/home/bleon/git/low-depth-image-circuits/tests/test_vqc_metrics.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_vqc_metrics.py:6: in <module>
+    from classifier.utils.vqc_training import _evaluate_scaled_metrics
+E   ModuleNotFoundError: No module named 'classifier'
+___________________ ERROR collecting tests/test_vqc_paths.py ___________________
+ImportError while importing test module '/home/bleon/git/low-depth-image-circuits/tests/test_vqc_paths.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_vqc_paths.py:5: in <module>
+    from classifier.utils import vqc_training
+E   ModuleNotFoundError: No module named 'classifier'
+=========================== short test summary info ============================
+ERROR tests/test_permutations.py
+ERROR tests/test_vqc_blocks.py
+ERROR tests/test_vqc_early_stopping.py
+ERROR tests/test_vqc_metrics.py
+ERROR tests/test_vqc_paths.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 5 errors during collection !!!!!!!!!!!!!!!!!!!!
+5 errors in 2.08s

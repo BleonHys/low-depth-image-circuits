@@ -1,0 +1,18 @@
+{
+  "status": "SUCCESS",
+  "error": null,
+  "best_val_loss": 2.3025834560394287,
+  "best_val_acc": 0.1000000014901161,
+  "best_epoch": 31,
+  "train_acc_at_best": 0.0,
+  "n_params": 770,
+  "best_val_loss_scaled": 2.3025835699284727,
+  "val_loss_scaled_mode": "multiply",
+  "best_val_loss_batchmean_unscaled": 2.302021026611328,
+  "best_val_acc_batchmean_unscaled": 0.1025641039013862,
+  "best_epoch_batchmean_unscaled": 31,
+  "train_acc_at_best_batchmean_unscaled": 0.0,
+  "val_size": 1000,
+  "val_idx_hash": "e5f3a80c3b1e7054676057ea72168697f9247140f111ed33dc53e0753fbae484",
+  "runtime_seconds": 330.65517830848694
+}

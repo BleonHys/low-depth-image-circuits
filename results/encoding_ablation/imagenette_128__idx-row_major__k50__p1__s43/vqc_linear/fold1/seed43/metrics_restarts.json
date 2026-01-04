@@ -1,0 +1,26 @@
+{
+  "restarts": [
+    {
+      "status": "FAILED",
+      "best_val_acc": null,
+      "best_val_loss": null,
+      "best_epoch": null,
+      "runtime_seconds": 698.6334671974182,
+      "n_params": null,
+      "seed": 43,
+      "fold": 1,
+      "dataset": "imagenette_128__idx-row_major__k50__p1__s43",
+      "model": "linear",
+      "building_block_tag": "su4",
+      "depth": 2,
+      "epochs": 30,
+      "batch_size": 16,
+      "optimizer": "adam",
+      "lr": 0.01,
+      "temperature": 1.0,
+      "error": "list index out of range",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/bleon/git/low-depth-image-circuits/scripts/run_vqc_training.py\", line 70, in _run_once\n    summary = vqc_main(config, use_ray=False) or {}\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/bleon/git/low-depth-image-circuits/classifier/utils/vqc_training.py\", line 375, in main\n    predict_fn, best_params, summary = training.train()\n                                       ^^^^^^^^^^^^^^^^\n  File \"/home/bleon/git/low-depth-image-circuits/classifier/utils/vqc_training.py\", line 330, in train\n    data_epoch = cb.tb_to_pandas()\n                 ^^^^^^^^^^^^^^^^^\n  File \"/home/bleon/git/low-depth-image-circuits/classifier/utils/vqc_training.py\", line 130, in tb_to_pandas\n    event_file = glob.glob(os.path.join(self.trial_dir, 'events.out.tfevents.*'))[0]\n                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^\nIndexError: list index out of range\n",
+      "restart_idx": 0
+    }
+  ]
+}

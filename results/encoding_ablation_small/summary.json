@@ -1,0 +1,26 @@
+[
+  {
+    "encoding": "row_major",
+    "model": "svm",
+    "n_total_runs": 1,
+    "n_success": 1,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.15,
+    "std_val_acc": 0.0,
+    "mean_runtime": 2.571082592010498,
+    "stability_score": 0.15,
+    "lps": 64.5
+  },
+  {
+    "encoding": "morton",
+    "model": "svm",
+    "n_total_runs": 1,
+    "n_success": 1,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.15,
+    "std_val_acc": 0.0,
+    "mean_runtime": 2.5238728523254395,
+    "stability_score": 0.15,
+    "lps": 64.5
+  }
+]

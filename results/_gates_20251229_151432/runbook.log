@@ -1,0 +1,18 @@
+[RUNBOOK] start: Mon Dec 29 03:14:32 PM CET 2025
+[RUNBOOK] root:  results/_gates_20251229_151432
+[RUNBOOK] pwd:   /home/bleon/git/low-depth-image-circuits
+[RUNBOOK] python: Python 3.12.3
+
+=== (0) GPU sanity ===
+jax.devices(): [CudaDevice(id=0)]
+
+=== (2) prepare MNIST data (k=200, seed=42) ===
+
+=== (3) Gate: MNIST VQC (paper-ish block + temperature_mode=divide) ===
+
+--- gate_mnist_quantum summary.csv ---
+encoding   model       n_total_runs  n_success  success_rate  mean_val_acc  std_val_acc           mean_val_acc_legacy_batchmean_unscaled  std_val_acc_legacy_batchmean_unscaled  legacy_metric_note         mean_runtime       stability_score  lps
+hilbert    vqc_linear  4             4          1.0           0.13125       0.011792476415070752  0.10666666428248088                     0.0                                    legacy comparability only  98.4742602109909   0.13125          19.625
+row_major  vqc_linear  4             4          1.0           0.18          0.03254804141572884   0.13399999737739562                     0.03168595909277895                    legacy comparability only  106.6875616312027  0.18             16.5
+
+=== (4) Gate: vqc_debug_one_batch (gradient flow) ===

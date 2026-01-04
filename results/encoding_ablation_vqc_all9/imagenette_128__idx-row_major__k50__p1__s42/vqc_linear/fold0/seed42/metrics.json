@@ -1,0 +1,20 @@
+{
+  "status": "SUCCESS",
+  "best_val_acc": 0.10416666666666666,
+  "best_val_loss": 2.2996603515952376,
+  "best_epoch": 9,
+  "runtime_seconds": 612.9124979972839,
+  "n_params": 650,
+  "seed": 42,
+  "fold": 0,
+  "dataset": "imagenette_128__idx-row_major__k50__p1__s42",
+  "model": "linear",
+  "building_block_tag": "su4",
+  "depth": 2,
+  "epochs": 30,
+  "batch_size": 16,
+  "optimizer": "adam",
+  "lr": 0.01,
+  "temperature": 1.0,
+  "error": null
+}

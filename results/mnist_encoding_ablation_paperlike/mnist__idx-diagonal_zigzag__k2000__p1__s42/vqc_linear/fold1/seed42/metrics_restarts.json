@@ -1,0 +1,35 @@
+{
+  "restarts": [
+    {
+      "status": "SUCCESS",
+      "best_val_acc": 0.303,
+      "best_val_loss": 2.2941982915055297,
+      "best_epoch": 150,
+      "best_val_loss_scaled": 2.2941982915055297,
+      "val_loss_scaled_mode": "multiply",
+      "runtime_seconds": 6212.879629135132,
+      "n_params": 1070,
+      "best_val_loss_batchmean_unscaled": 2.2942172375083167,
+      "best_val_acc_batchmean_unscaled": 0.30264149962356257,
+      "best_epoch_batchmean_unscaled": 150,
+      "train_acc_at_best": 0.15213836137931677,
+      "train_acc_at_best_batchmean_unscaled": 0.15213836137931677,
+      "val_size": 4000,
+      "val_idx_hash": "21c375c6d9997e52b0773db705d2be4a91eae51c165297cc69dc7c3dfb42b49b",
+      "seed": 42,
+      "fold": 1,
+      "dataset": "mnist__idx-diagonal_zigzag__k2000__p1__s42",
+      "model": "linear",
+      "building_block_tag": "su4",
+      "depth": 6,
+      "epochs": 150,
+      "batch_size": 100,
+      "optimizer": "adam",
+      "lr": 0.0001,
+      "temperature": 1.0,
+      "temperature_mode": "multiply",
+      "error": null,
+      "restart_idx": 0
+    }
+  ]
+}

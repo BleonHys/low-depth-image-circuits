@@ -1,0 +1,10 @@
+encoding,model,n_total_runs,n_success,success_rate,mean_val_acc,std_val_acc,mean_val_acc_legacy_batchmean_unscaled,std_val_acc_legacy_batchmean_unscaled,legacy_metric_note,mean_runtime,stability_score,lps
+morton,vqc_linear,10,10,1.0,0.1,0.0,0.11363636363636365,0.0,legacy comparability only,744.1415145397186,0.1,64.5
+hilbert,vqc_linear,10,10,1.0,0.1,0.0,0.11363636363636365,0.0,legacy comparability only,759.897640633583,0.1,77.90625
+row_major,vqc_linear,10,10,1.0,0.1,0.0,0.11363636363636365,0.0,legacy comparability only,784.8098157405853,0.1,64.5
+column_major,vqc_linear,10,10,1.0,0.1,0.0,0.11363636363636365,0.0,legacy comparability only,743.7746910810471,0.1,64.5
+snake,vqc_linear,10,10,1.0,0.1,0.0,0.11363636363636365,0.0,legacy comparability only,743.9007094621659,0.1,64.5
+corner_spiral,vqc_linear,10,10,1.0,0.1,0.0,0.11363636363636365,0.0,legacy comparability only,743.995915055275,0.1,168.515625
+diagonal,vqc_linear,10,10,1.0,0.1,0.0,0.11363636363636365,0.0,legacy comparability only,743.9765320301055,0.1,85.5
+diagonal_zigzag,vqc_linear,10,10,1.0,0.1,0.0,0.11363636363636365,0.0,legacy comparability only,744.1114156961441,0.1,85.5
+vertical_snake,vqc_linear,10,10,1.0,0.1,0.0,0.11363636363636365,0.0,legacy comparability only,743.8495082139968,0.1,64.5

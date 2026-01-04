@@ -1,0 +1,32 @@
+[
+  {
+    "encoding": "hilbert",
+    "model": "vqc_linear",
+    "n_total_runs": 5,
+    "n_success": 5,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.1094,
+    "std_val_acc": 0.018799999999999994,
+    "mean_val_acc_legacy_batchmean_unscaled": 0.10256410256410256,
+    "std_val_acc_legacy_batchmean_unscaled": 0.0,
+    "legacy_metric_note": "legacy comparability only",
+    "mean_runtime": 370.61530470848083,
+    "stability_score": 0.1094,
+    "lps": 19.625
+  },
+  {
+    "encoding": "row_major",
+    "model": "vqc_linear",
+    "n_total_runs": 5,
+    "n_success": 5,
+    "success_rate": 1.0,
+    "mean_val_acc": 0.2574,
+    "std_val_acc": 0.003261901286060021,
+    "mean_val_acc_legacy_batchmean_unscaled": 0.26399999092786736,
+    "std_val_acc_legacy_batchmean_unscaled": 0.0033455400946823316,
+    "legacy_metric_note": "legacy comparability only",
+    "mean_runtime": 818.2581457138061,
+    "stability_score": 0.2574,
+    "lps": 16.5
+  }
+]

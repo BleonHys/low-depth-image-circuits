@@ -1,0 +1,20 @@
+{
+  "status": "FAILED",
+  "best_val_acc": null,
+  "best_val_loss": null,
+  "best_epoch": null,
+  "runtime_seconds": 25.140623331069946,
+  "n_params": null,
+  "seed": 42,
+  "fold": 0,
+  "dataset": "imagenette_128__idx-morton__k10__p1__s42",
+  "model": "nonlinear",
+  "building_block_tag": "su4",
+  "depth": 4,
+  "epochs": 30,
+  "batch_size": 32,
+  "optimizer": "adam",
+  "lr": 0.0008,
+  "temperature": 0.0078125,
+  "error": "RESOURCE_EXHAUSTED: Out of memory while trying to allocate 15.68GiB."
+}

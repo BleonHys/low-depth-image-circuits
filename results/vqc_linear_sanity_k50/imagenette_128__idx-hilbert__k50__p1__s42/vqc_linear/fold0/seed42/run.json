@@ -1,0 +1,47 @@
+{
+  "config": {
+    "tfds_name": "imagenette/320px",
+    "base_dataset": "imagenette_128",
+    "dataset_id": "imagenette_128__idx-hilbert__k50__p1__s42",
+    "encoding": "hilbert",
+    "model": "vqc_linear",
+    "fold": 0,
+    "seed": 42,
+    "restarts": 1,
+    "max_per_class": 50,
+    "n_patches": 1,
+    "timestamp": "2025-12-26T23:14:51.699978Z",
+    "git_commit": "d9b3e73ad861174ce3539aa536ed8841b9f347ce",
+    "patch_shape": [
+      128,
+      128
+    ],
+    "image_shape": [
+      128,
+      128
+    ],
+    "color_mode": "rgb",
+    "vqc_model": "linear",
+    "vqc_depth": 4,
+    "vqc_epochs": 100,
+    "vqc_batch_size": 32,
+    "vqc_optimizer": "adam",
+    "vqc_lr": 0.0008,
+    "vqc_temperature": 0.0078125,
+    "vqc_building_block": "su4",
+    "vqc_patience": 10,
+    "vqc_min_delta": 0.0,
+    "vqc_restarts": 1
+  },
+  "status": "SUCCESS",
+  "metrics": {
+    "val_accuracy": 0.11363636363636365
+  },
+  "runtime_seconds": 1798.5624215602875,
+  "logs": {
+    "stdout": "/home/bleon/git/low-depth-image-circuits/results/vqc_linear_sanity_k50/imagenette_128__idx-hilbert__k50__p1__s42/vqc_linear/fold0/seed42/stdout.txt",
+    "stderr": "/home/bleon/git/low-depth-image-circuits/results/vqc_linear_sanity_k50/imagenette_128__idx-hilbert__k50__p1__s42/vqc_linear/fold0/seed42/stderr.txt"
+  },
+  "error": null,
+  "artifacts": {}
+}

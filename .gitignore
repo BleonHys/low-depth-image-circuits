@@ -12,6 +12,3 @@
 _jit_compiled/
 
 data
-*results
-*results_classifier
-results/

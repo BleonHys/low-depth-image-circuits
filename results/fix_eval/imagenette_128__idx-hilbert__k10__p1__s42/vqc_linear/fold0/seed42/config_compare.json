@@ -1,0 +1,20 @@
+{
+  "dataset_name": "imagenette_128__idx-hilbert__k10__p1__s42",
+  "data_dir": "/home/bleon/git/low-depth-image-circuits/data",
+  "basepath": "/home/bleon/git/low-depth-image-circuits/results/fix_eval/imagenette_128__idx-hilbert__k10__p1__s42/vqc_linear/fold0/seed42",
+  "fold": 0,
+  "seed": 42,
+  "model_name": "LinearVQC",
+  "building_block_tag": "su4",
+  "n_qubits": 17,
+  "depth": 2,
+  "epochs": 30,
+  "batch_size": 16,
+  "optimizer": "adam",
+  "learning_rate": 0.01,
+  "temperature": 1.0,
+  "compression_depth": 0,
+  "early_stopping_patience": 10,
+  "min_delta": 0.0,
+  "n_patches": 1
+}

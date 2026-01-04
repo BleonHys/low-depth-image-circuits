@@ -1,0 +1,34 @@
+{
+  "config": {
+    "tfds_name": "imagenette/320px",
+    "base_dataset": "imagenette_128",
+    "dataset_id": "imagenette_128__idx-diagonal_zigzag__k50__p1__s42",
+    "encoding": "diagonal_zigzag",
+    "model": "svm",
+    "fold": 0,
+    "seed": 42,
+    "restarts": 1,
+    "max_per_class": 50,
+    "n_patches": 1,
+    "timestamp": "2025-12-26T18:29:54.460873Z",
+    "git_commit": "d9b3e73ad861174ce3539aa536ed8841b9f347ce",
+    "patch_shape": [
+      128,
+      128
+    ]
+  },
+  "status": "SUCCESS",
+  "metrics": {
+    "train_accuracy": 0.9575,
+    "val_accuracy": 0.28
+  },
+  "runtime_seconds": 3.5785672664642334,
+  "logs": {
+    "stdout": "/home/bleon/git/low-depth-image-circuits/results/encoding_ablation_big/imagenette_128__idx-diagonal_zigzag__k50__p1__s42/svm/fold0/seed42/stdout.txt",
+    "stderr": "/home/bleon/git/low-depth-image-circuits/results/encoding_ablation_big/imagenette_128__idx-diagonal_zigzag__k50__p1__s42/svm/fold0/seed42/stderr.txt"
+  },
+  "error": null,
+  "artifacts": {
+    "svm_results_dir": "/home/bleon/git/low-depth-image-circuits/classifier/_results/svm/imagenette_128__idx-diagonal_zigzag__k50__p1__s42_imagenette_128__idx-diagonal_zigzag__k50__p1__s42__f0__s42"
+  }
+}

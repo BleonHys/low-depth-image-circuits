@@ -1,0 +1,3 @@
+encoding,model,n_total_runs,n_success,success_rate,mean_val_acc,std_val_acc,mean_val_acc_legacy_batchmean_unscaled,std_val_acc_legacy_batchmean_unscaled,legacy_metric_note,mean_runtime,stability_score,lps
+hilbert,vqc_linear,4,4,1.0,0.1,0.0,0.125,0.0,legacy comparability only,83.74762511253357,0.1,77.90625
+row_major,vqc_linear,4,4,1.0,0.1,0.0,0.125,0.0,legacy comparability only,83.6886311173439,0.1,64.5
