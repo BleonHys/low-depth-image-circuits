@@ -123,11 +123,11 @@ eb4 = errorbar((1:no_trainEpochs),diag_zigzag_data(:,1),diag_zigzag_data(:,2)/10
 eb5 = errorbar((1:no_trainEpochs),cor_spiral_data(:,1),cor_spiral_data(:,2)/100,'LineWidth',1);
 eb6 = errorbar((1:no_trainEpochs),snake_data(:,1),snake_data(:,1)/100,'LineWidth',1);
 eb7 = errorbar((1:no_trainEpochs),snake_vert_data(:,1),snake_vert_data(:,2)/100,'LineWidth',1);
-eb8 = errorbar((1:no_trainEpochs),hilb_data(:,1),hilb_data(:,2)/100,'LineWidth',1);
-eb9 = errorbar((1:no_trainEpochs),mort_data(:,1),mort_data(:,2)/100,'LineWidth',1);
+eb8 = errorbar((1:no_trainEpochs),hilb_data(:,1),hilb_data(:,2)/100,'LineWidth',1,'LineStyle','--');
+eb9 = errorbar((1:no_trainEpochs),mort_data(:,1),mort_data(:,2)/100,'LineWidth',1,'LineStyle','--');
 hold off
 title('MNIST classification accuracy with different image encoding');
-legend('column-major','diagonal','row-major','diagonal-zigzag','corner-spiral','snake','vertical snake','hilbert','morton','Location','northwest');
+legend('Column Major','Left Diagonal','Row Major','Zig-Zag Diagonal','Corner Spiral','Horizontal Snake','Vertical Snake','Hilbert','Morton','Location','northwest');
 xlabel('No. of training epochs');
 ylabel('classification accuracy in %');
 ylim([0, 50]);
@@ -144,11 +144,11 @@ plt4 = plot((1:no_trainEpochs),diag_zigzag_data(:,1),'LineWidth',1);
 plt5 = plot((1:no_trainEpochs),cor_spiral_data(:,1),'LineWidth',1);
 plt6 = plot((1:no_trainEpochs),snake_data(:,1),'LineWidth',1);
 plt7 = plot((1:no_trainEpochs),snake_vert_data(:,1),'LineWidth',1);
-plt8 = plot((1:no_trainEpochs),hilb_data(:,1),'LineWidth',1);
-plt9 = plot((1:no_trainEpochs),mort_data(:,1),'LineWidth',1);
+plt8 = plot((1:no_trainEpochs),hilb_data(:,1),'LineWidth',1,'LineStyle','--');
+plt9 = plot((1:no_trainEpochs),mort_data(:,1),'LineWidth',1,'LineStyle','--');
 hold off
 title('MNIST classification accuracy with different image encoding');
-legend('column-major','diagonal','row-major','diagonal-zigzag','corner-spiral','snake','vertical snake','hilbert','morton','Location','northwest');
+legend('Column Major','Left Diagonal','Row Major','Zig-Zag Diagonal','Corner Spiral','Horizontal Snake','Vertical Snake','Hilbert','Morton','Location','northwest');
 xlabel('No. of training epochs');
 ylabel('classification accuracy in %');
 ylim([0, 50]);
